@@ -18,8 +18,7 @@ def normalizationParams(X):
     stddev = np.sqrt(np.mean((X - mean) * (X - mean), axis = 0))
     return mean, stddev
 
-if __name__ == '__main__':
-    
+def prepareData():
     normalize = True
     train_X, train_Y = loadData('data/train.csv')
     valid_X, valid_Y = loadData('data/val.csv')
@@ -32,5 +31,16 @@ if __name__ == '__main__':
     np.save('data/train_X.npy', train_X)
     np.save('data/train_Y.npy', train_Y)
     np.save('data/valid_X.npy', valid_X)
-    np.save('data/valid_Y.npy', valid_Y)
+    np.save('data/valid_Y.npy', valid_Y)   
+
+def loadData():
+    train_X, train_Y = np.load('data/train_X.npy'), np.load('data/train_Y.npy')
+    valid_X, valid_Y = np.load('data/valid_X.npy'), np.load('data/valid_Y.npy')
+    return train_X, train_Y, valid_X, valid_Y
+
+if __name__ == '__main__':
+
+    pass
+    
+
 

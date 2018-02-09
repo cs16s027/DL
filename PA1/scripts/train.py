@@ -2,6 +2,9 @@ import numpy as np
 import pandas as pd
 import argparse
 import sys
+from network import Network
+from optimizers import gradient_descent
+from data import loadData
 
 # Parse Arguments
 
@@ -75,4 +78,22 @@ else:
 
 momentum = args.momentum
 anneal = args.anneal
+
+# Load data
+train_X, train_Y, valid_X, valid_Y = loadData()
+# Initialize network
+network = Network(num_hidden, sizes, activation, 'softmax', loss)
+# Train
+num_epochs = 50
+for epoch in range(num_epochs):
+    epoch_loss = []
+    num_batches = int(float(train_X.shape[0]) / batch_size)
+    for batch in range(num_batches):
+        start, end = batch * batch_size, (batch + 1) * batch_size
+        x, y = train_X[start : end].T, train_Y[start : end].T
+        batch_loss = gradient_descent(network, x, y, lr)
+        epoch_loss.append(batch_loss)
+    print 'Loss after {} epochs = {}'.format(epoch + 1, np.mean(epoch_loss))
+
+        
 
