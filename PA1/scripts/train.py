@@ -1,7 +1,11 @@
-import numpy as np
-import pandas as pd
-import argparse
+# System libraries
 import sys
+import os
+import argparse
+import logging
+import numpy as np
+# Custom imports
+from helpers import setup_logger
 from network import Network
 from optimizers import gradient_descent
 from data import loadData
@@ -34,6 +38,8 @@ parser.add_argument('--expt_dir', default='./logs',
                     help='save dir for experiment logs')
 parser.add_argument('--train', default='./data',
                     help='path to training set')
+parser.add_argument('--val', default='./data',
+                    help='path to validation set')
 parser.add_argument('--test', default='./data',
                     help='path to test set')
 args = parser.parse_args()
@@ -78,22 +84,36 @@ else:
 
 momentum = args.momentum
 anneal = args.anneal
+# Paths
+train_path, valid_path, test_path = args.train, args.val, args.test
+logs_path = args.expt_dir
 
+# Logging
+train_log = setup_logger('train-log', os.path.join(logs_path, 'train.log'))
+valid_log = setup_logger('valid-log', os.path.join(logs_path, 'valid.log'))
 # Load data
-train_X, train_Y, valid_X, valid_Y = loadData()
+data = loadData(train_path, valid_path, test_path)
+train_X, train_Y, valid_X, valid_Y, test_X, test_Y = data['train']['X'], data['train']['Y'],\
+                                                     data['valid']['X'], data['valid']['Y'],\
+                                                     data['test']['X'], data['test']['Y'], 
+
 # Initialize network
-network = Network(num_hidden, sizes, activation, 'softmax', loss)
+network = Network(num_hidden, sizes, theta = None, activation_choice = activation, output_choice = 'softmax', loss_choice = loss)
 # Train
 num_epochs = 50
+num_batches = int(float(train_X.shape[0]) / batch_size)
+steps = 0
 for epoch in range(num_epochs):
-    epoch_loss = []
-    num_batches = int(float(train_X.shape[0]) / batch_size)
     for batch in range(num_batches):
         start, end = batch * batch_size, (batch + 1) * batch_size
-        x, y = train_X[start : end].T, train_Y[start : end].T
-        batch_loss = gradient_descent(network, x, y, lr)
-        epoch_loss.append(batch_loss)
-    print 'Loss after {} epochs = {}'.format(epoch + 1, np.mean(epoch_loss))
-
-        
-
+        x, y = train_X[:, range(start, end)], train_Y[range(start, end)]
+        gradient_descent(network, x, y, lr)
+        steps += batch_size
+        if steps % 100 == 0 and steps != 0:
+            y_pred, loss = network.forward(train_X, train_Y)
+            error = network.performance(train_Y, y_pred)
+            train_log.info('Epoch {}, Step {}, Loss: {}, Error: {}, lr: {}'.format(epoch, steps, loss, error, lr))
+            y_pred, loss = network.forward(valid_X, valid_Y)
+            error = network.performance(valid_Y, y_pred)
+            valid_log.info('Epoch {}, Step {}, Loss: {}, Error: {}, lr: {}'.format(epoch, steps, loss, error, lr))
+            

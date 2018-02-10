@@ -3,7 +3,7 @@ from helpers import activation_function, output_function, loss_function
 
 class Network:
 
-    def __init__(self, num_hidden, sizes, activation_choice = 'softmax', output_choice = 'softmax', loss_choice = 'ce'):
+    def __init__(self, num_hidden, sizes, theta = None, activation_choice = 'softmax', output_choice = 'softmax', loss_choice = 'ce'):
         # L hidden layers, layer 0 is input, layer (L+1) is output
         sizes = [784] + sizes + [10]
         self.L = num_hidden
@@ -19,9 +19,16 @@ class Network:
             self.param_map['b{}'.format(i)] = (start, end)
             start = end
         num_params = end
-        # Allocate params
-        self.theta = np.random.uniform(size = num_params)
-        self.grad_theta = np.zeros((num_params))
+        # Parameter vector - theta
+        # Load pre-trained weights or initialize the network
+        if theta != None:
+            assert theta.shape == [num_params]
+            self.theta = theta
+        else:
+            self.theta = np.random.uniform(-0.1, 0.1, size = num_params)
+        # Gradient vector - theta
+        self.grad_theta = np.zeros_like(self.theta)
+        # Map theta (grad_theta) to params (grad_params)
         self.params = {}
         self.grad_params = {}
         for i in range(1, self.L + 2):
@@ -38,6 +45,7 @@ class Network:
         self.output_choice = output_choice
         self.loss_choice = loss_choice
 
+    # x is of shape (input_size, batch_size), y is of shape (batch_size)
     def forward(self, x, y):
         # a(i) = b(i) + W(i)*h(i-1)
         # h(i) = g(i-1)
@@ -46,31 +54,47 @@ class Network:
         self.batch_size = x.shape[1]
         for i in range (1, self.L + 1):
             self.activations['a{}'.format(i)] = self.params['b{}'.format(i)] + np.matmul(self.params['W{}'.format(i)], self.activations['h{}'.format(i-1)])
+            print 'a{} = '.format(i), self.activations['a{}'.format(i)] 
             self.activations['h{}'.format(i)] = activation_function(self.activations['a{}'.format(i)], self.activation_choice)
+            print 'h{} = '.format(i), self.activations['h{}'.format(i)] 
+
         self.activations['a{}'.format(self.L + 1)] = self.params['b{}'.format(self.L + 1)] + np.matmul(self.params['W{}'.format(self.L+1)], self.activations['h{}'.format(self.L)])
+        print 'a{} = '.format(self.L + 1), self.activations['a{}'.format(self.L + 1)] 
         y_pred = output_function(self.activations['a{}'.format(self.L + 1)], self.output_choice)
+        print 'y_pred = ', y_pred
         loss = loss_function(y, y_pred, self.loss_choice)
+        #print y_pred.argmax(axis = 0)
+        print 'loss = ', loss
         return y_pred, loss
 
     def backward(self, y_true, y_pred):
         grad_activations = {}
         # Compute output gradient
-        e_y = np.zeros((self.output_shape, self.batch_size))
-        e_y[[int(index) for index in y_true], range(self.batch_size)] = 1
+        e_y = np.zeros_like(y_pred)
+        e_y[y_true, range(self.batch_size)] = 1
         grad_activations['a{}'.format(self.L + 1)] = -(e_y - y_pred)
         for k in range (self.L + 1, 0, -1):
             # Gradients wrt parameters
-            self.grad_params['W{}'.format(k)] = np.matmul(grad_activations['a{}'.format(k)], self.activations['h{}'.format(k-1)].T)
-            self.grad_params['b{}'.format(k)] = np.sum(grad_activations['a{}'.format(k)], axis = 1)
+            self.grad_params['W{}'.format(k)][:, :] = (1.0 / self.batch_size) * np.matmul(grad_activations['a{}'.format(k)], self.activations['h{}'.format(k-1)].T)
+            #print k, np.linalg.norm(grad_activations['a{}'.format(k)].T), np.linalg.norm(self.grad_params['W{}'.format(k)])
+            #print np.linalg.norm(self.grad_params['W{}'.format(k)])
+            self.grad_params['b{}'.format(k)][:, :] = (1.0 / self.batch_size) * np.sum(grad_activations['a{}'.format(k)], axis = 1, keepdims = True)
             # Do not compute gradients with respect to the inputs
             if k == 1:
                 break
             # Gradients wrt prev layer
             grad_activations['h{}'.format(k-1)] = np.matmul(self.params['W{}'.format(k)].T, grad_activations['a{}'.format(k)])
             # Gradients wrt prev preactivation
-            activation_ = activation_function(self.activations['a{}'.format(k - 1)], self.activation_choice)
-            grad_activation_ = np.multiply(activation_, (1 - activation_))
+            grad_activation_ = np.multiply(self.activations['h{}'.format(k - 1)], 1 - self.activations['h{}'.format(k - 1)])
             grad_activations['a{}'.format(k-1)] = np.multiply(grad_activations['h{}'.format(k-1)], grad_activation_)
 
-        return self.grad_theta
+    def performance(self, y_true, y_pred):
+        y_pred = y_pred.argmax(axis = 0)
+        return float(np.sum(y_pred != y_true)) /y_pred.shape[0] * 100
+
+    def save(self, path):
+        np.save(path, self.theta)
+
+    def load(self, path):
+        self.theta[:] = np.load(path)
 
