@@ -3,7 +3,7 @@ from helpers import activation_function, output_function, loss_function
 
 class Network:
 
-    def __init__(self, num_hidden, sizes, theta = None, activation_choice = 'softmax', output_choice = 'softmax', loss_choice = 'ce'):
+    def __init__(self, num_hidden, sizes, activation_choice = 'softmax', output_choice = 'softmax', loss_choice = 'ce'):
         # L hidden layers, layer 0 is input, layer (L+1) is output
         sizes = [784] + sizes + [10]
         self.L = num_hidden
@@ -21,11 +21,7 @@ class Network:
         num_params = end
         # Parameter vector - theta
         # Load pre-trained weights or initialize the network
-        if theta != None:
-            assert theta.shape == [num_params]
-            self.theta = theta
-        else:
-            self.theta = np.random.uniform(-0.1, 0.1, size = num_params)
+        self.theta = np.random.uniform(-1.0, 1.0, size = num_params)
         # Gradient vector - theta
         self.grad_theta = np.zeros_like(self.theta)
         # Map theta (grad_theta) to params (grad_params)
@@ -54,17 +50,11 @@ class Network:
         self.batch_size = x.shape[1]
         for i in range (1, self.L + 1):
             self.activations['a{}'.format(i)] = self.params['b{}'.format(i)] + np.matmul(self.params['W{}'.format(i)], self.activations['h{}'.format(i-1)])
-            print 'a{} = '.format(i), self.activations['a{}'.format(i)] 
             self.activations['h{}'.format(i)] = activation_function(self.activations['a{}'.format(i)], self.activation_choice)
-            print 'h{} = '.format(i), self.activations['h{}'.format(i)] 
 
         self.activations['a{}'.format(self.L + 1)] = self.params['b{}'.format(self.L + 1)] + np.matmul(self.params['W{}'.format(self.L+1)], self.activations['h{}'.format(self.L)])
-        print 'a{} = '.format(self.L + 1), self.activations['a{}'.format(self.L + 1)] 
         y_pred = output_function(self.activations['a{}'.format(self.L + 1)], self.output_choice)
-        print 'y_pred = ', y_pred
         loss = loss_function(y, y_pred, self.loss_choice)
-        #print y_pred.argmax(axis = 0)
-        print 'loss = ', loss
         return y_pred, loss
 
     def backward(self, y_true, y_pred):
@@ -76,8 +66,6 @@ class Network:
         for k in range (self.L + 1, 0, -1):
             # Gradients wrt parameters
             self.grad_params['W{}'.format(k)][:, :] = (1.0 / self.batch_size) * np.matmul(grad_activations['a{}'.format(k)], self.activations['h{}'.format(k-1)].T)
-            #print k, np.linalg.norm(grad_activations['a{}'.format(k)].T), np.linalg.norm(self.grad_params['W{}'.format(k)])
-            #print np.linalg.norm(self.grad_params['W{}'.format(k)])
             self.grad_params['b{}'.format(k)][:, :] = (1.0 / self.batch_size) * np.sum(grad_activations['a{}'.format(k)], axis = 1, keepdims = True)
             # Do not compute gradients with respect to the inputs
             if k == 1:
