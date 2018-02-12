@@ -1,0 +1,1 @@
+python scripts/test.py --lr 0.5 --momentum 0.5 --num_hidden 4 --sizes 300,300,300,300 --activation sigmoid --loss ce --opt momentum --batch_size 100 --anneal False --save_dir models/ --expt_dir logs/ --train data/train.csv --val data/val.csv --test data/test.csv

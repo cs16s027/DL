@@ -63,7 +63,7 @@ if ((args.loss != 'sq') and (args.loss != 'ce')):
 else:
     loss = args.loss
 
-if ((args.opt != 'gd') and (args.opt != 'momentum') and (args.opt != 'nag') and (args.opt != 'adam') and (args.opt != 'grad_check')):
+if ((args.opt != 'gd') and (args.opt != 'momentum') and (args.opt != 'nag') and (args.opt != 'adam')):
     print "Optimizer is gd/momentum/nag/adam"
     sys.exit(1)
 else:
@@ -88,11 +88,7 @@ anneal = True
 # Paths
 train_path, valid_path, test_path = args.train, args.val, args.test
 model_path = args.save_dir
-logs_path = args.expt_dir
 
-# Logging
-train_log = setup_logger('train-log', os.path.join(logs_path, 'train.log'))
-valid_log = setup_logger('valid-log', os.path.join(logs_path, 'valid.log'))
 # Load data
 data = loadData(train_path, valid_path, test_path)
 train_X, train_Y, valid_X, valid_Y, test_X, test_Y = data['train']['X'], data['train']['Y'],\
@@ -103,36 +99,12 @@ train_X, train_Y, valid_X, valid_Y, test_X, test_Y = data['train']['X'], data['t
 np.random.seed(1234)
 network = Network(num_hidden, sizes, activation_choice = activation, output_choice = 'softmax', loss_choice = loss)
 model_name = '{}-{}-{}-{}-{}-{}-{}.npy'.format(num_hidden, ','.join([str(word) for word in sizes]), activation, 'softmax', loss, opt, lr)
-optimizer = Optimizers(network.theta.shape[0], opt, lr, momentum)
-# Train
-num_epochs = 100
-num_batches = int(float(train_X.shape[0]) / batch_size)
-steps = 0
-latency = 10
-loss_history = [np.inf]
-for epoch in range(num_epochs):
-    steps = 0
-    for batch in range(num_batches):
-        start, end = batch * batch_size, (batch + 1) * batch_size
-        x, y = train_X[:, range(start, end)], train_Y[range(start, end)]
-        optimizer.opts[opt](network, x, y)
-        steps += batch_size
-        if steps % 100 == 0 and steps != 0:
-            y_pred, loss = network.forward(train_X, train_Y)
-            error = network.performance(train_Y, y_pred)
-            train_log.info('Epoch {}, Step {}, Loss: {}, Error: {}, lr: {}'.format(epoch, steps, loss, error, optimizer.lr))
-            y_pred, loss = network.forward(valid_X, valid_Y)
-            error = network.performance(valid_Y, y_pred)
-            valid_log.info('Epoch {}, Step {}, Loss: {}, Error: {}, lr: {}'.format(epoch, steps, loss, error, optimizer.lr))
-            if loss < min(loss_history):
-                network.save(os.path.join(model_path, model_name))    
-            loss_history.append(loss)
-            latency -= 1
-            if anneal == True and len(loss_history) - np.argmin(loss_history) > 10 and latency < 0:
-                network.load(path = os.path.join(model_path, model_name))
-                optimizer.lr /= 2
-                latency = 10
-            if optimizer.lr <= 1e-4:
-                print 'Training ended'
-                exit()
+results_file = '{}-{}-{}-{}-{}-{}-{}.txt'.format(num_hidden, ','.join([str(word) for word in sizes]), activation, 'softmax', loss, opt, lr)
+# Test
+network.load(path = os.path.join(model_path, model_name))
+predictions = network.predict(test_X)
+with open(os.path.join(model_path, results_file), 'wb') as f:
+    f.write('id,label\n')
+    for index, p in enumerate(predictions):
+        f.write('{},{}\n'.format(index, p))
 

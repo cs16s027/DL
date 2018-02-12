@@ -5,6 +5,7 @@ class Network:
 
     def __init__(self, num_hidden, sizes, activation_choice = 'softmax', output_choice = 'softmax', loss_choice = 'ce'):
         # L hidden layers, layer 0 is input, layer (L+1) is output
+        self.sizes = sizes
         sizes = [784] + sizes + [10]
         self.L = num_hidden
         self.output_shape = 10
@@ -21,7 +22,7 @@ class Network:
         num_params = end
         # Parameter vector - theta
         # Load pre-trained weights or initialize the network
-        self.theta = np.random.uniform(-1.0, 1.0, size = num_params)
+        self.theta = np.random.uniform(-5.0, 5.0, size = num_params)
         # Gradient vector - theta
         self.grad_theta = np.zeros_like(self.theta)
         # Map theta (grad_theta) to params (grad_params)
@@ -73,16 +74,25 @@ class Network:
             # Gradients wrt prev layer
             grad_activations['h{}'.format(k-1)] = np.matmul(self.params['W{}'.format(k)].T, grad_activations['a{}'.format(k)])
             # Gradients wrt prev preactivation
-            grad_activation_ = np.multiply(self.activations['h{}'.format(k - 1)], 1 - self.activations['h{}'.format(k - 1)])
+            if self.activation_choice == 'sigmoid':
+                grad_activation_ = np.multiply(self.activations['h{}'.format(k - 1)], 1 - self.activations['h{}'.format(k - 1)])
+            elif self.activation_choice == 'tanh':
+                grad_activation_ = 1 - (self.activations['h{}'.format(k - 1)]) ** 2
             grad_activations['a{}'.format(k-1)] = np.multiply(grad_activations['h{}'.format(k-1)], grad_activation_)
 
     def performance(self, y_true, y_pred):
         y_pred = y_pred.argmax(axis = 0)
         return float(np.sum(y_pred != y_true)) /y_pred.shape[0] * 100
 
+    def predict(self, x):
+        y_pred, _ = self.forward(x, np.ones((x.shape[1]), dtype = np.int16))
+        return y_pred.argmax(axis = 0)
+
     def save(self, path):
         np.save(path, self.theta)
 
-    def load(self, path):
-        self.theta[:] = np.load(path)
+    def load(self, theta = None, path = None):
+        if path != None:
+            theta = np.load(path)
+        self.theta[:] = theta
 
