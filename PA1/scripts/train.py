@@ -105,34 +105,46 @@ network = Network(num_hidden, sizes, activation_choice = activation, output_choi
 model_name = '{}-{}-{}-{}-{}-{}-{}.npy'.format(num_hidden, ','.join([str(word) for word in sizes]), activation, 'softmax', loss, opt, lr)
 optimizer = Optimizers(network.theta.shape[0], opt, lr, momentum)
 # Train
-num_epochs = 100
-num_batches = int(float(train_X.shape[0]) / batch_size)
+num_epochs = 1000
+num_batches = int(float(train_X.shape[1]) / batch_size)
 steps = 0
-latency = 10
+#latency = 20
+lr_min = 0.25
 loss_history = [np.inf]
+prev_loss = np.inf
+indices = np.arange(train_X.shape[1])
 for epoch in range(num_epochs):
     steps = 0
+    np.random.shuffle(indices)
+    train_X, train_Y = train_X[:, indices], train_Y[indices]
+    epoch_loss = []
     for batch in range(num_batches):
         start, end = batch * batch_size, (batch + 1) * batch_size
         x, y = train_X[:, range(start, end)], train_Y[range(start, end)]
         optimizer.opts[opt](network, x, y)
+        grad_norm = np.linalg.norm(network.grad_theta)
+        print 'Grad = ', grad_norm 
         steps += batch_size
         if steps % 100 == 0 and steps != 0:
-            y_pred, loss = network.forward(train_X, train_Y)
+            y_pred, train_loss = network.forward(train_X, train_Y)
             error = network.performance(train_Y, y_pred)
-            train_log.info('Epoch {}, Step {}, Loss: {}, Error: {}, lr: {}'.format(epoch, steps, loss, error, optimizer.lr))
-            y_pred, loss = network.forward(valid_X, valid_Y)
+            train_log.info('Epoch {}, Step {}, Loss: {}, Error: {}, lr: {}'.format(epoch, steps, train_loss, error, optimizer.lr))
+            y_pred, valid_loss = network.forward(valid_X, valid_Y)
             error = network.performance(valid_Y, y_pred)
-            valid_log.info('Epoch {}, Step {}, Loss: {}, Error: {}, lr: {}'.format(epoch, steps, loss, error, optimizer.lr))
-            if loss < min(loss_history):
+            valid_log.info('Epoch {}, Step {}, Loss: {}, Error: {}, lr: {}'.format(epoch, steps, valid_loss, error, optimizer.lr))
+            if valid_loss < min(loss_history):
                 network.save(os.path.join(model_path, model_name))    
-            loss_history.append(loss)
-            latency -= 1
-            if anneal == True and len(loss_history) - np.argmin(loss_history) > 10 and latency < 0:
-                network.load(path = os.path.join(model_path, model_name))
-                optimizer.lr /= 2
-                latency = 10
-            if optimizer.lr <= 1e-4:
-                print 'Training ended'
-                exit()
+            loss_history.append(valid_loss)
+            #latency -= 1
+            #if anneal == True and len(loss_history) - np.argmin(loss_history) > 10 and latency < 0:
+    if anneal == True and valid_loss > prev_loss:
+        network.load(path = os.path.join(model_path, model_name))
+        if optimizer.lr > lr_min:
+            optimizer.lr /= 2
+            epoch -= 1
+        else:
+            optimizer.lr = lr_min
+        #latency = 50
+    else:
+        prev_loss = valid_loss
 

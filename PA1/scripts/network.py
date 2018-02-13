@@ -21,8 +21,9 @@ class Network:
             start = end
         num_params = end
         # Parameter vector - theta
-        # Load pre-trained weights or initialize the network
-        self.theta = np.random.uniform(-5.0, 5.0, size = num_params)
+        #self.theta = np.random.randn(num_params)
+        self.theta = np.random.uniform(-1.0, 1.0, num_params)
+        #self.theta = np.zeros((num_params))
         # Gradient vector - theta
         self.grad_theta = np.zeros_like(self.theta)
         # Map theta (grad_theta) to params (grad_params)
@@ -32,6 +33,7 @@ class Network:
             weight = 'W{}'.format(i)
             start, end = self.param_map[weight]
             self.params[weight] = self.theta[start : end].reshape((sizes[i], sizes[i - 1]))
+            #self.params[weight][:] = np.random.normal(0, 1, size = (sizes[i], sizes[i-1]))
             self.grad_params[weight] = self.grad_theta[start : end].reshape((sizes[i], sizes[i - 1]))
             bias = 'b{}'.format(i)
             start, end = self.param_map[bias]
