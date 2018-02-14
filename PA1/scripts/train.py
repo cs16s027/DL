@@ -108,8 +108,7 @@ optimizer = Optimizers(network.theta.shape[0], opt, lr, momentum)
 num_epochs = 1000
 num_batches = int(float(train_X.shape[1]) / batch_size)
 steps = 0
-#latency = 20
-lr_min = 0.25
+lr_min = 0.1
 loss_history = [np.inf]
 prev_loss = np.inf
 indices = np.arange(train_X.shape[1])
@@ -125,7 +124,7 @@ for epoch in range(num_epochs):
         grad_norm = np.linalg.norm(network.grad_theta)
         print 'Grad = ', grad_norm 
         steps += batch_size
-        if steps % 100 == 0 and steps != 0:
+        if steps % 500 == 0 and steps != 0:
             y_pred, train_loss = network.forward(train_X, train_Y)
             error = network.performance(train_Y, y_pred)
             train_log.info('Epoch {}, Step {}, Loss: {}, Error: {}, lr: {}'.format(epoch, steps, train_loss, error, optimizer.lr))
@@ -135,8 +134,6 @@ for epoch in range(num_epochs):
             if valid_loss < min(loss_history):
                 network.save(os.path.join(model_path, model_name))    
             loss_history.append(valid_loss)
-            #latency -= 1
-            #if anneal == True and len(loss_history) - np.argmin(loss_history) > 10 and latency < 0:
     if anneal == True and valid_loss > prev_loss:
         network.load(path = os.path.join(model_path, model_name))
         if optimizer.lr > lr_min:
@@ -144,7 +141,6 @@ for epoch in range(num_epochs):
             epoch -= 1
         else:
             optimizer.lr = lr_min
-        #latency = 50
     else:
         prev_loss = valid_loss
 
