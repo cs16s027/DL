@@ -102,7 +102,7 @@ train_X, train_Y, valid_X, valid_Y, test_X, test_Y = data['train']['X'], data['t
                                                      data['test']['X'], data['test']['Y'], 
 
 # Initialize network
-finetune = True
+finetune = False
 np.random.seed(1234)
 network = Network(num_hidden, sizes, activation_choice = activation, output_choice = 'softmax', loss_choice = loss)
 model_name = '{}-{}-{}-{}-{}-{}-{}.npy'.format(num_hidden, ','.join([str(word) for word in sizes]), activation, 'softmax', loss, opt, lr)
@@ -113,7 +113,7 @@ optimizer = Optimizers(network.theta.shape[0], opt, lr, momentum)
 num_epochs = 1000
 num_batches = int(float(train_X.shape[1]) / batch_size)
 steps = 0
-lr_min = 0.1
+lr_min = 0.0001
 loss_history = [np.inf]
 prev_loss = np.inf
 indices = np.arange(train_X.shape[1])

@@ -9,8 +9,8 @@ class Optimizers:
         self.lr = lr
         # To help with momentum based optimizers
         self.momentum = momentum
-        self.prev_square = np.zeros_like(num_params)
-        self.prev_update = np.zeros_like(num_params)
+        self.grad_square_history = np.zeros_like(num_params)
+        self.grad_history = np.zeros_like(num_params)
         self.iter = 0
 
     def gradient_descent(self, network, x, y):
@@ -22,42 +22,33 @@ class Optimizers:
     def momentum_gradient_descent(self, network, x, y):
         y_pred, loss = network.forward(x, y)
         network.backward(y, y_pred)
-        update = self.momentum * self.prev_update + self.lr * network.grad_theta
+        update = self.momentum * self.grad_history + self.lr * network.grad_theta
         network.theta[:] = network.theta - update
-        self.prev_update = update
+        self.grad_history = update
         return loss
 
     def nesterov_accelerated_gradient_descent(self, network, x, y):
         y_pred, loss = network.forward(x, y)
         look_ahead = Network(network.L, network.sizes, network.activation_choice, network.output_choice, network.loss_choice)
-        look_ahead.load(theta = network.theta - self.momentum * self.prev_update)
+        look_ahead.load(theta = network.theta - self.momentum * self.grad_history)
         look_ahead.forward(x, y)
         look_ahead.backward(y, y_pred)
-        self.prev_update = self.momentum * self.prev_update + self.lr * look_ahead.grad_theta
-        network.theta[:] = network.theta - self.prev_update
+        self.grad_history = self.momentum * self.grad_history + self.lr * look_ahead.grad_theta
+        network.theta[:] = network.theta - self.grad_history
         return loss
         
     def adam_optimizer(self, network, x, y):
         beta_1 = 0.9 
         beta_2 = 0.999
         epsilon = 1e-8
-        self.iter += 100
+        self.iter += 1
         y_pred, loss = network.forward(x, y)
         network.backward(y, y_pred)
-        update = beta_1 * self.prev_update + (1-beta_1) * network.grad_theta
-        square = beta_2 * self.prev_square + (1-beta_2) * np.square(network.grad_theta)
-        print 'update before bias = {}'.format(np.linalg.norm(update))
-        print 'square before bias = {}'.format(np.linalg.norm(square))
-        print 'denom-1 = {}'.format(1 - beta_1 ** self.iter)
-        print 'denom-2 = {}'.format(1 - beta_2 ** self.iter)
-        update = update / (1 - beta_1 ** self.iter)
-        square = square / (1 - beta_2 ** self.iter)
-        print 'grad = {}'.format(np.linalg.norm(network.grad_theta))
-        print 'update = {}'.format(np.linalg.norm(update))
-        print 'square = {}'.format(np.linalg.norm(square))
+        self.grad_history = beta_1 * self.grad_history + (1 - beta_1) * network.grad_theta
+        self.grad_square_history = beta_2 * self.grad_square_history + (1 - beta_2) * np.square(network.grad_theta)
+        update = self.grad_history / (1 - beta_1 ** self.iter)
+        square = self.grad_square_history / (1 - beta_2 ** self.iter)
         network.theta[:] = network.theta - self.lr * (update / (np.sqrt(square) + epsilon))
-        self.prev_update = update
-        self.prev_square = square
         return loss
 
     def grad_check(self, network, x, y):
