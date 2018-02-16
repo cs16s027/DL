@@ -63,7 +63,7 @@ if ((args.loss != 'sq') and (args.loss != 'ce')):
 else:
     loss = args.loss
 
-if ((args.opt != 'gd') and (args.opt != 'momentum') and (args.opt != 'nag') and (args.opt != 'adam') and (args.opt != 'grad_check')):
+if ((args.opt != 'gd') and (args.opt != 'momentum') and (args.opt != 'nag') and (args.opt != 'adam')):
     print "Optimizer is gd/momentum/nag/adam"
     sys.exit(1)
 else:
@@ -88,13 +88,7 @@ anneal = True
 # Paths
 train_path, valid_path, test_path = args.train, args.val, args.test
 model_path = args.save_dir
-logs_path = args.expt_dir
 
-# Logging
-train_log_name = '{}-{}-{}-{}-{}-{}-{}.train.log'.format(num_hidden, ','.join([str(word) for word in sizes]), activation, 'softmax', loss, opt, lr)
-valid_log_name = '{}-{}-{}-{}-{}-{}-{}.valid.log'.format(num_hidden, ','.join([str(word) for word in sizes]), activation, 'softmax', loss, opt, lr)
-train_log = setup_logger('train-log', os.path.join(logs_path, train_log_name))
-valid_log = setup_logger('valid-log', os.path.join(logs_path, valid_log_name))
 # Load data
 data = loadData(train_path, valid_path, test_path)
 train_X, train_Y, valid_X, valid_Y, test_X, test_Y = data['train']['X'], data['train']['Y'],\
@@ -102,50 +96,15 @@ train_X, train_Y, valid_X, valid_Y, test_X, test_Y = data['train']['X'], data['t
                                                      data['test']['X'], data['test']['Y'], 
 
 # Initialize network
-finetune = True
 np.random.seed(1234)
 network = Network(num_hidden, sizes, activation_choice = activation, output_choice = 'softmax', loss_choice = loss)
 model_name = '{}-{}-{}-{}-{}-{}-{}.npy'.format(num_hidden, ','.join([str(word) for word in sizes]), activation, 'softmax', loss, opt, lr)
-if finetune == True:
-    network.load(path = model_name)
-optimizer = Optimizers(network.theta.shape[0], opt, lr, momentum)
-# Train
-num_epochs = 1000
-num_batches = int(float(train_X.shape[1]) / batch_size)
-steps = 0
-lr_min = 0.1
-loss_history = [np.inf]
-prev_loss = np.inf
-indices = np.arange(train_X.shape[1])
-for epoch in range(num_epochs):
-    steps = 0
-    np.random.shuffle(indices)
-    train_X, train_Y = train_X[:, indices], train_Y[indices]
-    epoch_loss = []
-    for batch in range(num_batches):
-        start, end = batch * batch_size, (batch + 1) * batch_size
-        x, y = train_X[:, range(start, end)], train_Y[range(start, end)]
-        optimizer.opts[opt](network, x, y)
-        grad_norm = np.linalg.norm(network.grad_theta)
-        #print 'Grad = ', grad_norm 
-        steps += batch_size
-        if steps % 500 == 0 and steps != 0:
-            y_pred, train_loss = network.forward(train_X, train_Y)
-            error = network.performance(train_Y, y_pred)
-            train_log.info('Epoch {}, Step {}, Loss: {}, Error: {}, lr: {}'.format(epoch, steps, train_loss, error, optimizer.lr))
-            y_pred, valid_loss = network.forward(valid_X, valid_Y)
-            error = network.performance(valid_Y, y_pred)
-            valid_log.info('Epoch {}, Step {}, Loss: {}, Error: {}, lr: {}'.format(epoch, steps, valid_loss, error, optimizer.lr))
-            if valid_loss < min(loss_history):
-                network.save(os.path.join(model_path, model_name))    
-            loss_history.append(valid_loss)
-    if anneal == True and valid_loss > prev_loss:
-        network.load(path = os.path.join(model_path, model_name))
-        if optimizer.lr > lr_min:
-            optimizer.lr /= 2
-            epoch -= 1
-        else:
-            optimizer.lr = lr_min
-    else:
-        prev_loss = valid_loss
+results_file = '{}-{}-{}-{}-{}-{}-{}.txt'.format(num_hidden, ','.join([str(word) for word in sizes]), activation, 'softmax', loss, opt, lr)
+# Test
+network.load(path = os.path.join(model_path, model_name))
+predictions = network.predict(test_X)
+with open(os.path.join(model_path, results_file), 'wb') as f:
+    f.write('id,label\n')
+    for index, p in enumerate(predictions):
+        f.write('{},{}\n'.format(index, p))
 

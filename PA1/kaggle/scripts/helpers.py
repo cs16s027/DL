@@ -31,7 +31,7 @@ def loss_function(y_true, y_pred, loss = 'ce'):
 def setup_logger(name, log_file, level=logging.INFO):
     """Function setup as many loggers as you want"""
 
-    handler = logging.FileHandler(log_file, mode = 'w')        
+    handler = logging.FileHandler(log_file)        
     handler.setFormatter(formatter)
 
     logger = logging.getLogger(name)

@@ -91,10 +91,8 @@ model_path = args.save_dir
 logs_path = args.expt_dir
 
 # Logging
-train_log_name = '{}-{}-{}-{}-{}-{}-{}.train.log'.format(num_hidden, ','.join([str(word) for word in sizes]), activation, 'softmax', loss, opt, lr)
-valid_log_name = '{}-{}-{}-{}-{}-{}-{}.valid.log'.format(num_hidden, ','.join([str(word) for word in sizes]), activation, 'softmax', loss, opt, lr)
-train_log = setup_logger('train-log', os.path.join(logs_path, train_log_name))
-valid_log = setup_logger('valid-log', os.path.join(logs_path, valid_log_name))
+train_log = setup_logger('train-log', os.path.join(logs_path, 'train.log'))
+valid_log = setup_logger('valid-log', os.path.join(logs_path, 'valid.log'))
 # Load data
 data = loadData(train_path, valid_path, test_path)
 train_X, train_Y, valid_X, valid_Y, test_X, test_Y = data['train']['X'], data['train']['Y'],\
@@ -102,12 +100,9 @@ train_X, train_Y, valid_X, valid_Y, test_X, test_Y = data['train']['X'], data['t
                                                      data['test']['X'], data['test']['Y'], 
 
 # Initialize network
-finetune = True
 np.random.seed(1234)
 network = Network(num_hidden, sizes, activation_choice = activation, output_choice = 'softmax', loss_choice = loss)
 model_name = '{}-{}-{}-{}-{}-{}-{}.npy'.format(num_hidden, ','.join([str(word) for word in sizes]), activation, 'softmax', loss, opt, lr)
-if finetune == True:
-    network.load(path = model_name)
 optimizer = Optimizers(network.theta.shape[0], opt, lr, momentum)
 # Train
 num_epochs = 1000
@@ -127,7 +122,7 @@ for epoch in range(num_epochs):
         x, y = train_X[:, range(start, end)], train_Y[range(start, end)]
         optimizer.opts[opt](network, x, y)
         grad_norm = np.linalg.norm(network.grad_theta)
-        #print 'Grad = ', grad_norm 
+        print 'Grad = ', grad_norm 
         steps += batch_size
         if steps % 500 == 0 and steps != 0:
             y_pred, train_loss = network.forward(train_X, train_Y)
