@@ -107,7 +107,7 @@ np.random.seed(1234)
 network = Network(num_hidden, sizes, activation_choice = activation, output_choice = 'softmax', loss_choice = loss)
 model_name = '{}-{}-{}-{}-{}-{}-{}.npy'.format(num_hidden, ','.join([str(word) for word in sizes]), activation, 'softmax', loss, opt, lr)
 if finetune == True:
-    network.load(path = model_name)
+    network.load(path = os.path.join(model_path, model_name))
 optimizer = Optimizers(network.theta.shape[0], opt, lr, momentum)
 # Train
 num_epochs = 1000

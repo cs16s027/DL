@@ -39,9 +39,9 @@ class Optimizers:
         
     def adam_optimizer(self, network, x, y):
         beta_1 = 0.9 
-        beta_2 = 0.8
+        beta_2 = 0.999
         epsilon = 1e-8
-        self.iter += 1
+        self.iter += 100
         y_pred, loss = network.forward(x, y)
         network.backward(y, y_pred)
         update = beta_1 * self.prev_update + (1-beta_1) * network.grad_theta
@@ -49,7 +49,7 @@ class Optimizers:
         print 'update before bias = {}'.format(np.linalg.norm(update))
         print 'square before bias = {}'.format(np.linalg.norm(square))
         print 'denom-1 = {}'.format(1 - beta_1 ** self.iter)
-        print 'denom-1 = {}'.format(1 - beta_2 ** self.iter)
+        print 'denom-2 = {}'.format(1 - beta_2 ** self.iter)
         update = update / (1 - beta_1 ** self.iter)
         square = square / (1 - beta_2 ** self.iter)
         print 'grad = {}'.format(np.linalg.norm(network.grad_theta))
