@@ -62,7 +62,10 @@ class Network:
         # Compute output gradient
         e_y = np.zeros_like(y_pred)
         e_y[y_true, range(self.batch_size)] = 1
-        grad_activations['a{}'.format(self.L + 1)] = -(e_y - y_pred)
+        if self.loss_choice == 'ce':
+            grad_activations['a{}'.format(self.L + 1)] = -(e_y - y_pred)
+        elif self.loss_choice == 'sq':
+            grad_activations['a{}'.format(self.L + 1)] = -(e_y - y_pred) * y_pred * (1 - y_pred)
         for k in range (self.L + 1, 0, -1):
             # Gradients wrt parameters
             self.grad_params['W{}'.format(k)][:, :] = (1.0 / self.batch_size) * np.matmul(grad_activations['a{}'.format(k)], self.activations['h{}'.format(k-1)].T)

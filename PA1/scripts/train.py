@@ -64,6 +64,8 @@ if ((args.loss != 'sq') and (args.loss != 'ce')):
     sys.exit(1)
 else:
     loss = args.loss
+    # Output function
+    output_choice = 'softmax' if loss == 'ce' else 'sigmoid'
 
 if ((args.opt != 'gd') and (args.opt != 'momentum') and (args.opt != 'nag') and (args.opt != 'adam') and (args.opt != 'grad_check')):
     print "Optimizer is gd/momentum/nag/adam"
@@ -93,9 +95,10 @@ model_path = args.save_dir
 logs_path = args.expt_dir
 pretrained_path = args.pretrain
 
+
 # Logging
-train_log_name = '{}-{}-{}-{}-{}-{}-{}-{}.train.log'.format(num_hidden, ','.join([str(word) for word in sizes]), activation, 'softmax', batch_size, loss, opt, lr)
-valid_log_name = '{}-{}-{}-{}-{}-{}-{}-{}.valid.log'.format(num_hidden, ','.join([str(word) for word in sizes]), activation, 'softmax', batch_size, loss, opt, lr)
+train_log_name = '{}-{}-{}-{}-{}-{}-{}-{}.train.log'.format(num_hidden, ','.join([str(word) for word in sizes]), activation, output_choice, batch_size, loss, opt, lr)
+valid_log_name = '{}-{}-{}-{}-{}-{}-{}-{}.valid.log'.format(num_hidden, ','.join([str(word) for word in sizes]), activation, output_choice, batch_size, loss, opt, lr)
 train_log = setup_logger('train-log', os.path.join(logs_path, train_log_name))
 valid_log = setup_logger('valid-log', os.path.join(logs_path, valid_log_name))
 # Load data
@@ -106,8 +109,8 @@ train_X, train_Y, valid_X, valid_Y, test_X, test_Y = data['train']['X'], data['t
 
 # Initialize network
 np.random.seed(1234)
-network = Network(num_hidden, sizes, activation_choice = activation, output_choice = 'softmax', loss_choice = loss)
-model_name = '{}-{}-{}-{}-{}-{}-{}-{}.npy'.format(num_hidden, ','.join([str(word) for word in sizes]), activation, 'softmax', batch_size, loss, opt, lr)
+network = Network(num_hidden, sizes, activation_choice = activation, output_choice = output_choice, loss_choice = loss)
+model_name = '{}-{}-{}-{}-{}-{}-{}-{}.npy'.format(num_hidden, ','.join([str(word) for word in sizes]), activation, output_choice, batch_size, loss, opt, lr)
 if pretrained_path != None:
     network.load(path = pretrained_path)
 optimizer = Optimizers(network.theta.shape[0], opt, lr, momentum)

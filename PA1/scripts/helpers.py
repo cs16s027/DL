@@ -23,7 +23,9 @@ def output_function(x, activation = 'softmax'):
 def loss_function(y_true, y_pred, loss = 'ce'):
     batch_size = y_true.shape[0]
     if loss == 'sq':
-        return (1./(2*batch_size)) * np.sum((y_true - y_pred)**2)
+        e_y = np.zeros_like(y_pred)
+        e_y[y_true, range(batch_size)] = 1
+        return (1./(2*batch_size)) * np.sum((e_y - y_pred)**2)
     if loss == 'ce':
         return (-1.0 / batch_size) * np.log(y_pred[y_true, range(batch_size)]).sum()
 

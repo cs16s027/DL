@@ -1,1 +1,1 @@
-python scripts/train.py --lr 0.001 --momentum 0.5 --num_hidden 2 --sizes 100,100 --activation sigmoid --loss ce --opt adam --batch_size 10 --anneal true --save_dir models/problem_8/ --expt_dir logs/problem_8 --train data/train.csv --val data/val.csv --test data/test.csv
+python scripts/train.py --lr 0.001 --momentum 0.5 --num_hidden 2 --sizes 100,100 --activation sigmoid --loss sq --opt adam --batch_size 20 --anneal true --save_dir models/problem_7/ --expt_dir logs/problem_7 --train data/train.csv --val data/val.csv --test data/test.csv
