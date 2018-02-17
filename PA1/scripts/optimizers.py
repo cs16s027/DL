@@ -22,9 +22,8 @@ class Optimizers:
     def momentum_gradient_descent(self, network, x, y):
         y_pred, loss = network.forward(x, y)
         network.backward(y, y_pred)
-        update = self.momentum * self.grad_history + self.lr * network.grad_theta
-        network.theta[:] = network.theta - update
-        self.grad_history = update
+        self.grad_history = self.momentum * self.grad_history + self.lr * network.grad_theta
+        network.theta[:] = network.theta - self.grad_history
         return loss
 
     def nesterov_accelerated_gradient_descent(self, network, x, y):
