@@ -1,0 +1,87 @@
+\documentclass[addpoints,12pt]{exam}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{amssymb}
+\usepackage{tikz}
+\usepackage{animate}
+\usepackage{hyperref}
+\usepackage{comment}
+
+\printanswers
+%\unframedsolutions
+\pagestyle{headandfoot}
+
+% Fill in the details below
+\def\studentName{\textbf{Sankaran-Karthik}}
+\def\studentRoll{\textbf{CS17Z015, CS16S027}}
+
+\firstpageheader{CS 7015 - DL PA-1}{}{\studentName, \studentRoll}
+\firstpageheadrule
+\setlength{\parindent}{0cm}
+\graphicspath{ {/coursework/DL/Assignments/Programming-Assignments/DL/PA1/} }
+
+\begin{document}
+
+\section*{Problem-1}
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{plots/problem_1/plot.jpg}
+\centering
+\end{figure}
+We can see that the training error reduces as we increase the hidden layer size, but past 100 neurons the difference in performance reduces. The same trend follows with the validation loss. This could indicate that the model capacity is insufficient and additional hidden layers are required to learn more complex features and give better validation results.
+\newpage
+
+\section*{Problem-2}
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{plots/problem_2/plot.jpg}
+\centering
+\end{figure}
+We can see that the training error reduces as we increase the hidden layer size, possibly due to the model's increased capacity and ability to overfit. The validation loss also follows the same ordering, albeit with minimal difference between the models. This could indicate that 2 hidden layers provides sufficient enough capacity to generalize on this particular dataset.
+\newpage
+
+\section*{Problem-3}
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{plots/problem_3/plot.jpg}
+\centering
+\end{figure}
+We can see that the training error reduces as we increase the hidden layer size, possibly due to the model's increased capacity and ability to overfit. The validation loss also follows the same ordering, albeit with minimal difference.
+\newpage
+
+\section*{Problem-4}
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{plots/problem_4/plot.jpg}
+\centering
+\end{figure}
+We can see that the training error reduces minimally as we increase the hidden layer size. This could be because the model already has enough capacity to fit the data.
+\newpage
+
+\section*{Problem-5}
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{plots/problem_5/plot.jpg}
+\centering
+\end{figure}
+Just as proven in theory, Momentum shows greater oscillations than NAG. Vanilla gradient descent shows oscillations due to the small batch size (20), exhibiting behaviour closer to stochastic gradient descent than batch gradient descent. These oscillations are of different origin than those in the momentum based methods and direct comparison is not necessarily correct. Adam shows better stability than all of the above.
+\newpage
+
+\section*{Problem-6}
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{plots/problem_6/plot.jpg}
+\centering
+\end{figure}
+Both plots show consistently better performance when the sigmoid activation function is used.
+\newpage
+
+\section*{Problem-7}
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{plots/problem_7/plot.jpg}
+\centering
+\end{figure}
+The error seems to be lower for the squared error loss function, with far less slope and quick saturation. This does not necessarily reflect on the accuracy of the model. When using squared error loss for a classification problem, we are giving importance to outputs that are not necessarily useful. In addition to this, in the derivative of the squared error loss function there is a term of the form $y_i(1-y_i)$ which is multiplied by the gradient of the sigmoid output. As $y_i$ tends towards 0 or 1, as it should for a classification problem, that coefficient term will shrink, and hence the magnitude of the update will drop. This is one explanation for the early saturation of the curve.
+\newpage
+
+\section*{Problem-8}
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{plots/problem_8/plot.jpg}
+\centering
+\end{figure}
+We can see that the performance is generally better within the given number of epochs as the batch size reduces, and this could possibly be due to the larger number of updates per epoch. However, we can also see that the curve shows oscillations that are of greater magnitude when the batch size is lower, the greatest oscillations occurring for batch size 1 (SGD).
+\end{document}

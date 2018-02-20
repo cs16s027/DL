@@ -30,7 +30,7 @@ parser.add_argument('--opt', default='adam',
                     help='loss function (gd, momentum, nag, or adam)')
 parser.add_argument('--batch_size', type=int,
                     help='batch size (multiples of 5)')
-parser.add_argument('--anneal', type=bool, default=False,
+parser.add_argument('--anneal', default="true",
                     help='halve the learning rate if at any epoch the \
                     validation loss decreases and then restart that epoch')
 parser.add_argument('--save_dir', default='./models',
@@ -53,7 +53,7 @@ if (args.lr is None):
 else:
     lr = args.lr
 
-if ((args.activation != 'sigmoid') and (args.activation != 'tanh')):
+if ((args.activation != 'sigmoid') and (args.activation != 'tanh') and (args.activation != 'relu')):
     print "Activation is sigmoid/tanh"
     sys.exit(1)
 else:
@@ -86,15 +86,17 @@ else:
     sizes = map(int, args.sizes)
     num_hidden = args.num_hidden
     L = args.num_hidden
+if args.anneal.lower() == "true":
+    anneal = True
+else:
+    anneal = False
 
 momentum = args.momentum
-anneal = True
 # Paths
 train_path, valid_path, test_path = args.train, args.val, args.test
 model_path = args.save_dir
 logs_path = args.expt_dir
 pretrained_path = args.pretrain
-
 
 # Logging
 train_log_name = '{}-{}-{}-{}-{}-{}-{}-{}.train.log'.format(num_hidden, ','.join([str(word) for word in sizes]), activation, output_choice, batch_size, loss, opt, lr)

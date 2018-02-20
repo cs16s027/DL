@@ -80,6 +80,9 @@ class Network:
                 grad_activation_ = np.multiply(self.activations['h{}'.format(k - 1)], 1 - self.activations['h{}'.format(k - 1)])
             elif self.activation_choice == 'tanh':
                 grad_activation_ = 1 - (self.activations['h{}'.format(k - 1)]) ** 2
+            elif self.activation_choice == 'relu':
+                grad_activation_ = np.zeros_like(self.activations['a{}'.format(k - 1)])
+                grad_activation_[np.where(self.activations['a{}'.format(k - 1)] > 0)] = 1.0
             grad_activations['a{}'.format(k-1)] = np.multiply(grad_activations['h{}'.format(k-1)], grad_activation_)
 
     def performance(self, y_true, y_pred):

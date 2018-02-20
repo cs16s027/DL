@@ -16,7 +16,7 @@ def plot(points, plot_name, plot_title):
     fig = plt.figure(0)
     ax = fig.gca()
     # Label the graph
-    ax.set_title('{} loss for different batch sizes'.format(plot_title))
+    ax.set_title('{} loss for different optimizers'.format(plot_title))
     ax.set_xlabel('Epoch')
     ax.set_ylabel('Loss')
     # Set limits
@@ -25,26 +25,26 @@ def plot(points, plot_name, plot_title):
     # Turn on grid, add x-axis and y-axis
     ax.grid()
     # Plot the train and validation loss
-    ax.plot(points['1'][0], points['1'][1], linewidth = 1, color = 'red')
-    ax.plot(points['20'][0], points['20'][1], linewidth = 1, color = 'blue')
-    ax.plot(points['100'][0], points['100'][1], linewidth = 1, color = 'green')
-    ax.plot(points['1000'][0], points['1000'][1], linewidth = 1, color = 'black')
+    ax.plot(points['adam'][0], points['adam'][1], linewidth = 1, color = 'red')
+    ax.plot(points['gd'][0], points['gd'][1], linewidth = 1, color = 'blue')
+    ax.plot(points['momentum'][0], points['momentum'][1], linewidth = 1, color = 'green')
+    ax.plot(points['nag'][0], points['nag'][1], linewidth = 1, color = 'black')
 
     red = plt.Line2D((0,1), (0,0), color = 'red', marker='o', linestyle = '')
     blue = plt.Line2D((0,1), (0,0), color = 'blue', marker='o', linestyle = '')
     green = plt.Line2D((0,1), (0,0), color = 'green', marker='o', linestyle = '')
     black = plt.Line2D((0,1), (0,0), color = 'black', marker='o', linestyle = '')
-    ax.legend([red, blue, green, black], ['1', '20', '100', '1000'])
+    ax.legend([red, blue, green, black], ['adam', 'gd', 'momentum', 'nag'])
     plt.savefig(plot_name)
 
 _, stage, plot_name = sys.argv
 
 points = {}
-for item in os.listdir('logs/problem_8'):
+for item in os.listdir('logs/problem_5'):
     stage_ = item.split('.')[-2]
-    batch_size = item.split('-')[-4]
+    opt = item.split('-')[6]
     if stage.lower() == stage_:
-        points[batch_size] = loadLog(os.path.join('logs/problem_8', item))
+        points[opt] = loadLog(os.path.join('logs/problem_5', item))
     
 plot(points, plot_name, stage)
 

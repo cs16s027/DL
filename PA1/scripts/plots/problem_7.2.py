@@ -16,7 +16,7 @@ def plot(points, plot_name, plot_title):
     fig = plt.figure(0)
     ax = fig.gca()
     # Label the graph
-    ax.set_title('{} loss for different batch sizes'.format(plot_title))
+    ax.set_title('{} loss for comparison between ce and sq'.format(plot_title))
     ax.set_xlabel('Epoch')
     ax.set_ylabel('Loss')
     # Set limits
@@ -25,26 +25,23 @@ def plot(points, plot_name, plot_title):
     # Turn on grid, add x-axis and y-axis
     ax.grid()
     # Plot the train and validation loss
-    ax.plot(points['1'][0], points['1'][1], linewidth = 1, color = 'red')
-    ax.plot(points['20'][0], points['20'][1], linewidth = 1, color = 'blue')
-    ax.plot(points['100'][0], points['100'][1], linewidth = 1, color = 'green')
-    ax.plot(points['1000'][0], points['1000'][1], linewidth = 1, color = 'black')
+    ax.plot(points['ce'][0], points['ce'][1], linewidth = 1, color = 'red')
+    ax.plot(points['sq'][0], points['sq'][1], linewidth = 1, color = 'blue')
 
     red = plt.Line2D((0,1), (0,0), color = 'red', marker='o', linestyle = '')
     blue = plt.Line2D((0,1), (0,0), color = 'blue', marker='o', linestyle = '')
-    green = plt.Line2D((0,1), (0,0), color = 'green', marker='o', linestyle = '')
-    black = plt.Line2D((0,1), (0,0), color = 'black', marker='o', linestyle = '')
-    ax.legend([red, blue, green, black], ['1', '20', '100', '1000'])
+    ax.legend([red, blue], ['ce', 'sq'])
     plt.savefig(plot_name)
 
 _, stage, plot_name = sys.argv
 
 points = {}
-for item in os.listdir('logs/problem_8'):
+for item in os.listdir('logs/problem_7'):
     stage_ = item.split('.')[-2]
-    batch_size = item.split('-')[-4]
-    if stage.lower() == stage_:
-        points[batch_size] = loadLog(os.path.join('logs/problem_8', item))
+    if stage.lower() == stage_ and 'ce' in item:
+        points['ce'] = loadLog(os.path.join('logs/problem_7', item))
+    if stage.lower() == stage_ and 'sq' in item:
+        points['sq'] = loadLog(os.path.join('logs/problem_7', item))
     
 plot(points, plot_name, stage)
 

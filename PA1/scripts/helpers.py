@@ -8,6 +8,9 @@ def activation_function(x, activation = 'sigmoid'):
         return 1 / (1 + np.exp(-x))
     elif (activation == 'tanh'):
         return (np.exp(x) - np.exp(-x)) / (np.exp(x) + np.exp(-x))
+    elif activation == 'relu':
+        x[np.where(x < 0)] = 0.0
+        return x
     else:
         return x
 
@@ -25,7 +28,7 @@ def loss_function(y_true, y_pred, loss = 'ce'):
     if loss == 'sq':
         e_y = np.zeros_like(y_pred)
         e_y[y_true, range(batch_size)] = 1
-        return (1./(2*batch_size)) * np.sum((e_y - y_pred)**2)
+        return (1.0 / (2.0 * batch_size)) * np.sum((e_y - y_pred)**2)
     if loss == 'ce':
         return (-1.0 / batch_size) * np.log(y_pred[y_true, range(batch_size)]).sum()
 
