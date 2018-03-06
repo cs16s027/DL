@@ -13,10 +13,10 @@ _, corpusname = sys.argv
 sentences = Sentences(corpusname)
  
 size = 200
-sg = 0
+sg = 1
 hs = 0
 negative = 20
-window = 2
+window = 8
 modelname = 'skipgram' if sg == 1 else 'cbow'
 hsnegative = 'hs' if hs == 1 else 'negative'
 

@@ -1,8 +1,8 @@
 import gensim
-import sys
+import sys, os
 
 _, testfile, modelname = sys.argv
-resultsfile = '{}.txt'.format(modelname)
+resultsfile = os.path.join('results', modelname.split('models/')[1] + '.txt')
 model = gensim.models.Word2Vec.load(modelname)
 lines = [line.strip().split(' ') for line in open(testfile, 'r').readlines()]
 with open(resultsfile, 'w') as f:
