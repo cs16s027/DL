@@ -14,14 +14,15 @@ sentences = Sentences(corpusname)
  
 size = 200
 sg = 0
-hs = 1
-window = 5
+hs = 0
+negative = 20
+window = 2
 modelname = 'skipgram' if sg == 1 else 'cbow'
-hsname = 'hierarchical' if hs == 1 else 'negative'
+hsnegative = 'hs' if hs == 1 else 'negative'
 
-savename = '{}.{}.{}.{}.{}.bin'.format(corpusname.split('.txt')[0].split('/')[-1], modelname, size, window, hsname)
+savename = '{}.{}.{}.{}.{}.bin'.format(corpusname.split('.txt')[0].split('/')[-1], modelname, size, window, hsnegative)
 
-model = gensim.models.Word2Vec(sentences, min_count = 5, size = size, workers = 4, sg = sg, window = window, hs = 1)
+model = gensim.models.Word2Vec(sentences, min_count = 5, size = size, workers = 8, sg = sg, window = window, hs = 1, iter = 15)
 print savename
 model.save('models/{}'.format(savename))
 
