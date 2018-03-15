@@ -110,3 +110,12 @@ class CNN:
     def performance(self, batch_x, batch_y):
         loss, acc = self.sess.run([self.loss, self.accuracy], feed_dict={self.x: batch_x, self.y: batch_y})
         return loss, acc
+
+    def save(self, save_path):
+        saver = tf.train.Saver()
+        saver.save(self.sess, save_path)
+
+    def load(self, load_path):
+        saver = tf.train.Saver()
+        saver.restore(self.sess, load_path)
+
