@@ -43,15 +43,15 @@ train_log = setup_logger('train-log', os.path.join(logs_path, train_log_name))
 valid_log = setup_logger('valid-log', os.path.join(logs_path, valid_log_name))
 
 # Train
-num_epochs = 5
+num_epochs = 100
 batch_size = 20
 num_batches = int(float(train_X.shape[0]) / batch_size)
 steps = 0
 
-conv_sizes = [(5, 5, 1, 32), (5, 5, 32, 32)]
-dense_sizes = [7 * 7 * 32, 1024]
+conv_sizes = [(3, 3, 1, 32), (3, 3, 32, 64)]
+dense_sizes = [7 * 7 * 64, 1024, 512]
 num_out = 10
-arch = ['input', 'conv', 'pool', 'conv', 'pool', 'dense', 'out']
+arch = ['input', 'conv', 'pool', 'conv', 'pool', 'dense', 'dense', 'out']
 model_name = 'cnn'
 with tf.Graph().as_default(), tf.Session() as session:
     model = CNN(conv_sizes, dense_sizes, num_out, arch, session)
