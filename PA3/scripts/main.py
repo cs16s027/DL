@@ -24,9 +24,6 @@ parser.add_argument('--save_dir', default='./models',
                     help='path to save model')
 args = parser.parse_args()
 
-def parse_arch():
-    pass
-
 # Load data
 train_path, valid_path, test_path = args.train, args.val, args.test
 logs_path = args.expt_dir
@@ -46,13 +43,25 @@ num_epochs = 100
 batch_size = 20
 num_batches = int(float(train_X.shape[0]) / batch_size)
 steps = 0
-
+patience = 5
+early_stop=0
 # Load architecture
 arch = loadArch('models/cnn.json')
 
+def test(x, y, epoch, batch_size, is_train):
+    num_batches = x.shape[0] / batch_size
+    loss, acc = np.zeros((num_batches)), np.zeros((num_batches))
+    for batch in range(num_batches):
+        start, end = batch * batch_size, (batch + 1) * batch_size
+        batch_x, batch_y = x[start : end], y[start : end]
+        idx = epoch*num_batches + batch
+        loss[batch], acc[batch] = model.performance(train_X, train_Y, is_train, idx)
+    return np.mean(loss), np.mean(acc)
+        
+
 model_name = 'cnn'
 with tf.Graph().as_default(), tf.Session() as session:
-    model = CNN(arch, session)
+    model = CNN(arch, session, logs_path)
     loss_history = [np.inf]
     for epoch in range(num_epochs):
         steps = 0
@@ -65,11 +74,16 @@ with tf.Graph().as_default(), tf.Session() as session:
             model.step(x,y)
             steps += batch_size
             if steps % train_X.shape[0] == 0 and steps != 0:
-                train_loss, train_acc = model.performance(train_X, train_Y)
+                train_loss, train_acc = test(train_X, train_Y, epoch, batch_size, True)
                 train_log.info('Epoch {}, Step {}, Loss: {}, Accuracy: {}, lr: {}'.format(epoch, steps, train_loss, train_acc, model.lr))
-                valid_loss, valid_acc = model.performance(valid_X,valid_Y)
+                valid_loss, valid_acc = test(valid_X, valid_Y, epoch, batch_size, False)               
                 valid_log.info('Epoch {}, Step {}, Loss: {}, Accuracy: {}, lr: {}'.format(epoch, steps, valid_loss, valid_acc, model.lr))
                 if valid_loss < min(loss_history):
                     model.save(os.path.join(model_path, model_name))
+                    early_stop = 0
+                early_stop += 1
+                if (early_stop >= patience):
+                    print "No improvement in validation loss for " + str(patience) + " steps - stopping training!"
+                    break
                 loss_history.append(valid_loss)
     print("Optimization Finished!")

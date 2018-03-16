@@ -12,12 +12,16 @@ import json
 
 def generateModelFile(modelfile):
     model = [ ('input', {'num_neurons' : 784}),
-              ('conv1', {'filter_size' : 5, 'num_filters' : 32, 'stride' : 1, 'padding' : 'SAME'}),
-              ('pool1', {'filter_size' : 2, 'stride' : 2, 'padding' : 'SAME'}),  
-              ('conv2', {'filter_size' : 5, 'num_filters' : 64, 'stride' : 1, 'padding' : 'SAME'}),
+              ('conv1', {'filter_size' : 3, 'num_filters' : 32, 'stride' : 1, 'padding' : 'SAME'}),
+              ('pool1', {'filter_size' : 2, 'stride' : 2, 'padding' : 'SAME'}),
+              ('dropout1', {'prob' : 0.5}),
+              ('conv2', {'filter_size' : 3, 'num_filters' : 32, 'stride' : 1, 'padding' : 'SAME'}),
               ('pool2', {'filter_size' : 2, 'stride' : 2, 'padding' : 'SAME'}),
+              ('conv3', {'filter_size' : 3, 'num_filters' : 32, 'stride' : 1, 'padding' : 'SAME'}),
               ('reshape', ()),
               ('fc1'  , {'num_neurons' : 512}),
+              ('dropout2', {'prob' : 0.5}),
+              ('fc2'  , {'num_neurons' : 256}),
               ('output', {'num_neurons' :10})
             ]
 
@@ -67,6 +71,9 @@ def loadArch(modelfile):
                                        
         elif 'reshape' in layer:
             out_depth = spatial * spatial * out_depth
+
+        elif 'dropout' in layer:
+            arch_['prob'] = 0.5
 
         elif 'fc' in layer:
             weight, bias = 'Wd{}'.format(c_fc), 'bd{}'.format(c_fc)

@@ -17,11 +17,12 @@ def dense(x, W, b):
 
 class CNN:
 
-    def __init__(self, arch, session, initializer='xavier', lr = 0.001):
+    def __init__(self, arch, session, logs_path, initializer='xavier', lr = 0.001):
         self.params = {}
         self.layers = {}
         self.arch = arch
         self.lr = lr
+        self.logs_path = logs_path
         # Initializers
         if initializer=='he':
             init = tf.contrib.layers.variance_scaling_initializer()
@@ -39,7 +40,7 @@ class CNN:
                 bias = params['bias']['name']
                 shape = params['bias']['shape']
                 self.params[bias] = tf.get_variable(name = bias, shape = shape, initializer = init)
-            
+
         # Build the TensorFlow graph
         self.sess = session
         self.build_graph()
@@ -55,7 +56,7 @@ class CNN:
                 params = item['params']
                 weight = params['weight']['name']
                 bias = params['bias']['name']
-            
+
             if 'input' in layer:
                 self.layers[layer] = tf.reshape(self.x, shape=[-1, 28, 28, 1])
 
@@ -69,6 +70,13 @@ class CNN:
 
             elif 'reshape' in layer:
                 continue
+
+            elif 'dropout' in layer:
+                prob = item['prob']
+                self.layers[layer] = tf.nn.dropout(self.layers[prev_layer], keep_prob=prob)
+
+            elif 'batchnorm' in layer:
+                self.layers[layer] = tf.contrib.layers.batch_norm(self.layers[prev_layer])
 
             elif 'fc' in layer:
                 self.layers[layer] = dense(self.layers[prev_layer], self.params[weight], self.params[bias])
@@ -93,13 +101,26 @@ class CNN:
         correct_pred = tf.equal(tf.argmax(y_pred, 1), tf.argmax(self.y, 1))
         self.accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
         init = tf.global_variables_initializer()
+        # TensorBoard summaries
+        self.train_loss = tf.summary.scalar("train_loss", self.loss)
+        self.valid_loss = tf.summary.scalar("valid_loss", self.loss)
+        self.train_acc = tf.summary.scalar("train_accuracy", self.accuracy)
+        self.valid_acc = tf.summary.scalar("valid_accuracy", self.accuracy)
         self.sess.run(init)
+        self.summary_writer = tf.summary.FileWriter(self.logs_path, graph=tf.get_default_graph())
 
     def step(self, batch_x, batch_y):
         self.sess.run(self.train_op, feed_dict = {self.x: batch_x, self.y: batch_y})
 
-    def performance(self, batch_x, batch_y):
-        loss, acc = self.sess.run([self.loss, self.accuracy], feed_dict={self.x: batch_x, self.y: batch_y})
+    def performance(self, batch_x, batch_y, is_train, idx):
+        if is_train == True:
+            loss, acc, loss_summary, accuracy_summary = self.sess.run([self.loss, self.accuracy, self.train_loss, self.train_acc],
+                                                                       feed_dict={self.x: batch_x, self.y: batch_y})
+        else:
+            loss, acc, loss_summary, accuracy_summary = self.sess.run([self.loss, self.accuracy, self.valid_loss, self.valid_acc],
+                                                                       feed_dict={self.x: batch_x, self.y: batch_y})
+        self.summary_writer.add_summary(loss_summary, idx)
+        self.summary_writer.add_summary(accuracy_summary, idx)
         return loss, acc
 
     def save(self, save_path):
@@ -109,4 +130,3 @@ class CNN:
     def load(self, load_path):
         saver = tf.train.Saver()
         saver.restore(self.sess, load_path)
-
