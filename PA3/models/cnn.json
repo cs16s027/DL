@@ -1,0 +1,58 @@
+[
+    [
+        "input", 
+        {
+            "num_neurons": 784
+        }
+    ], 
+    [
+        "conv1", 
+        {
+            "filter_size": 5, 
+            "num_filters": 32, 
+            "padding": "SAME", 
+            "stride": 1
+        }
+    ], 
+    [
+        "pool1", 
+        {
+            "filter_size": 2, 
+            "padding": "SAME", 
+            "stride": 2
+        }
+    ], 
+    [
+        "conv2", 
+        {
+            "filter_size": 5, 
+            "num_filters": 64, 
+            "padding": "SAME", 
+            "stride": 1
+        }
+    ], 
+    [
+        "pool2", 
+        {
+            "filter_size": 2, 
+            "padding": "SAME", 
+            "stride": 2
+        }
+    ], 
+    [
+        "reshape", 
+        []
+    ], 
+    [
+        "fc1", 
+        {
+            "num_neurons": 512
+        }
+    ], 
+    [
+        "output", 
+        {
+            "num_neurons": 10
+        }
+    ]
+]
