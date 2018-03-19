@@ -6,12 +6,11 @@ source activate py27
 cd /storage/home/karthikt/DL/PA3
 
 # Batch size experiments
-nohup python -u scripts/main.py --arch models/1.json --lr 0.001 --batch_size 20 --init 1 --model_name 1.5 &
-nohup python -u scripts/main.py --arch models/1.json --lr 0.001 --batch_size 50 --init 1 --model_name 1.6 &
-nohup python -u scripts/main.py --arch models/1.json --lr 0.001 --batch_size 100 --init 1 --model_name 1.7 &
-nohup python -u scripts/main.py --arch models/1.json --lr 0.001 --batch_size 150 --init 1 --model_name 1.8 &
+nohup python -u scripts/main.py --arch models/1.json --lr 0.001 --batch_size 20 --init 1 --model_name 1.4 &
+nohup python -u scripts/main.py --arch models/1.json --lr 0.001 --batch_size 50 --init 1 --model_name 1.5 &
+nohup python -u scripts/main.py --arch models/1.json --lr 0.001 --batch_size 100 --init 1 --model_name 1.6 &
 
 # Initializer experiment
-nohup python -u scripts/main.py --arch models/1.json --lr 0.001 --batch_size 50 --init 2 --model_name 1.10 &
+nohup python -u scripts/main.py --arch models/1.json --lr 0.001 --batch_size 50 --init 2 --model_name 1.8 &
 
 sleep 86400

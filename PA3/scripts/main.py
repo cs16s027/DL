@@ -83,11 +83,10 @@ def train():
     valid_log = setup_logger('valid-log', os.path.join(logs_path, valid_log_name))
 
     # GPU config
-    gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.1)
+    gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.2)
 
     # Train
-    num_epochs = 2
-    batch_size = 20
+    num_epochs = 20
     num_batches = int(float(train_X.shape[0]) / batch_size)
     steps = 0
     patience = 5
