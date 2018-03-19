@@ -12,11 +12,11 @@ import json
 
 def generateModelFile(modelfile):
     model = [ ('input', {'num_neurons' : 784}),
-              ('conv1', {'filter_size' : 5, 'num_filters' : 8, 'stride' : 1, 'padding' : 'SAME'}),
-              ('conv2', {'filter_size' : 5, 'num_filters' : 8, 'stride' : 2, 'padding' : 'SAME'}),
-              ('conv3', {'filter_size' : 3, 'num_filters' : 4, 'stride' : 1, 'padding' : 'SAME'}),
-              ('conv4', {'filter_size' : 3, 'num_filters' : 4, 'stride' : 2, 'padding' : 'SAME'}),
-              ('conv5', {'filter_size' : 3, 'num_filters' : 4, 'stride' : 1, 'padding' : 'SAME'}),
+              ('conv1', {'filter_size' : 5, 'num_filters' : 16, 'stride' : 1, 'padding' : 'SAME'}),
+              ('conv2', {'filter_size' : 5, 'num_filters' : 32, 'stride' : 2, 'padding' : 'SAME'}),
+              ('conv3', {'filter_size' : 3, 'num_filters' : 64, 'stride' : 1, 'padding' : 'SAME'}),
+              ('conv4', {'filter_size' : 3, 'num_filters' : 32, 'stride' : 2, 'padding' : 'SAME'}),
+              ('conv5', {'filter_size' : 3, 'num_filters' : 16, 'stride' : 1, 'padding' : 'SAME'}),
               ('reshape', ()),
               ('fc1'  , {'num_neurons' : 64}),
               ('output', {'num_neurons' : 10})
@@ -103,4 +103,4 @@ def loadArch(modelfile):
     return arch
 
 if __name__ == '__main__':
-    generateModelFile('models/cnn.json')
+    generateModelFile('models/1.json')

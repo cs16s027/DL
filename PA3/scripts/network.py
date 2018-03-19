@@ -17,14 +17,16 @@ def dense(x, W, b):
 
 class CNN:
 
-    def __init__(self, arch, session, logs_path, initializer='xavier', lr = 0.001):
+    def __init__(self, arch, session, logs_path, initializer = 1, lr = 0.001, quiet = True):
         self.params = {}
         self.layers = {}
         self.arch = arch
         self.lr = lr
         self.logs_path = logs_path
+        self.quiet = quiet
         # Initializers
-        if initializer=='he':
+        # He 
+        if initializer == 2:
             init = tf.contrib.layers.variance_scaling_initializer()
         else:
             init = tf.contrib.layers.xavier_initializer()
@@ -108,7 +110,8 @@ class CNN:
         self.train_acc = tf.summary.scalar("train_accuracy", self.accuracy)
         self.valid_acc = tf.summary.scalar("valid_accuracy", self.accuracy)
         self.sess.run(init)
-        self.summary_writer = tf.summary.FileWriter(self.logs_path, graph=tf.get_default_graph())
+        if not self.quiet:
+            self.summary_writer = tf.summary.FileWriter(self.logs_path, graph=tf.get_default_graph())
 
     def step(self, batch_x, batch_y):
         self.sess.run(self.train_op, feed_dict = {self.x: batch_x, self.y: batch_y})
@@ -120,8 +123,9 @@ class CNN:
         else:
             loss, acc, loss_summary, accuracy_summary = self.sess.run([self.loss, self.accuracy, self.valid_loss, self.valid_acc],
                                                                        feed_dict={self.x: batch_x, self.y: batch_y})
-        self.summary_writer.add_summary(loss_summary, idx)
-        self.summary_writer.add_summary(accuracy_summary, idx)
+        if not self.quiet:
+            self.summary_writer.add_summary(loss_summary, idx)
+            self.summary_writer.add_summary(accuracy_summary, idx)
         return loss, acc
 
     def save(self, save_path):
