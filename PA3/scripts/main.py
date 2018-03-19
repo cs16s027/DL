@@ -1,4 +1,5 @@
 import sys, os
+import shutil
 import resource
 import argparse
 import logging
@@ -60,6 +61,9 @@ def train():
                                                          data['valid']['X'], data['valid']['Y'],\
                                                          data['test']['X'], data['test']['Y'],
     # Logging
+    if os.path.isdir(logs_path) == True:
+        shutil.rmtree(logs_path)
+    os.mkdir(logs_path)
     train_log_name = 'train.log'
     valid_log_name = 'valid.log'
     train_log = setup_logger('train-log', os.path.join(logs_path, train_log_name))

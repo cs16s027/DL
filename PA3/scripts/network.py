@@ -1,14 +1,14 @@
 import tensorflow as tf
 import sys
 
-def conv2d(x, W, b, strides=1):
-    x = tf.nn.conv2d(x, W, strides = [1, strides, strides, 1], padding='SAME')
+def conv2d(x, W, b, strides=1, padding = 'SAME'):
+    x = tf.nn.conv2d(x, W, strides = [1, strides, strides, 1], padding = padding)
     x = tf.nn.bias_add(x, b)
     return tf.nn.relu(x)
 
-def pool2d(x, k = 2):
-    return tf.nn.max_pool(x, ksize=[1, k, k, 1], strides=[1, k, k, 1],
-                          padding='SAME')
+def pool2d(x, filter_size, stride = 2, padding = 'SAME'):
+    return tf.nn.max_pool(x, ksize=[1, filter_size, filter_size, 1], strides=[1, stride, stride, 1],
+                          padding = padding)
 
 def dense(x, W, b):
     fc = tf.reshape(x, [-1, W.get_shape().as_list()[0]])
@@ -62,11 +62,12 @@ class CNN:
 
             elif 'conv' in layer:
                 padding, stride = item['padding'], item['stride']
-                self.layers[layer] = conv2d(self.layers[prev_layer], self.params[weight], self.params[bias], stride)
+                self.layers[layer] = conv2d(self.layers[prev_layer], self.params[weight], self.params[bias], stride, padding)
 
             elif 'pool' in layer:
+                filter_size = item['filter_size']
                 padding, stride = item['padding'], item['stride']
-                self.layers[layer] = pool2d(self.layers[prev_layer])
+                self.layers[layer] = pool2d(self.layers[prev_layer], filter_size, stride, padding)
 
             elif 'reshape' in layer:
                 continue
