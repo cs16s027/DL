@@ -13,11 +13,9 @@ import json
 def generateModelFile(modelfile):
     model = [ ('input', {'num_neurons' : 784}),
               ('conv1', {'filter_size' : 5, 'num_filters' : 8, 'stride' : 1, 'padding' : 'SAME'}),
-              ('conv2', {'filter_size' : 5, 'num_filters' : 8, 'stride' : 1, 'padding' : 'SAME'}),
-              ('pool1', {'filter_size' : 2, 'stride' : 2, 'padding' : 'SAME'}),
+              ('conv2', {'filter_size' : 5, 'num_filters' : 8, 'stride' : 2, 'padding' : 'SAME'}),
               ('conv3', {'filter_size' : 3, 'num_filters' : 4, 'stride' : 1, 'padding' : 'SAME'}),
-              ('conv4', {'filter_size' : 3, 'num_filters' : 4, 'stride' : 1, 'padding' : 'SAME'}),
-              ('pool2', {'filter_size' : 2, 'stride' : 2, 'padding' : 'SAME'}),
+              ('conv4', {'filter_size' : 3, 'num_filters' : 4, 'stride' : 2, 'padding' : 'SAME'}),
               ('conv5', {'filter_size' : 3, 'num_filters' : 4, 'stride' : 1, 'padding' : 'SAME'}),
               ('reshape', ()),
               ('fc1'  , {'num_neurons' : 64}),
@@ -48,6 +46,8 @@ def loadArch(modelfile):
             stride = spec['stride']
             c_conv += 1
 
+            spatial /= stride
+
             ### 
             arch_['params'] = {'weight' : {'shape' : [filter_size, filter_size, in_depth, out_depth], 
                                                    'name' : weight},
@@ -62,6 +62,7 @@ def loadArch(modelfile):
             filter_size = spec['filter_size']
             padding = spec['padding']
             stride = spec['stride']           
+
             spatial /= stride
 
             ### 
