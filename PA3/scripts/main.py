@@ -83,8 +83,7 @@ def train():
     valid_log = setup_logger('valid-log', os.path.join(logs_path, valid_log_name))
 
     # GPU config
-    #gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.333)
-    #config=tf.ConfigProto(gpu_options=gpu_options)
+    gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.1)
 
     # Train
     num_epochs = 2
@@ -94,7 +93,7 @@ def train():
     patience = 5
     early_stop=0
 
-    with tf.Session() as session:
+    with tf.Session(config = tf.ConfigProto(gpu_options=gpu_options)) as session:
         model = CNN(arch, session, logs_path, init, lr)
         loss_history = [np.inf]
         for epoch in range(num_epochs):
