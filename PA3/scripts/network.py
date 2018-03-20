@@ -1,4 +1,5 @@
 import tensorflow as tf
+import numpy as np
 import sys
 
 def conv2d(x, W, b, strides=1, padding = 'SAME'):
@@ -11,8 +12,7 @@ def pool2d(x, filter_size, stride = 2, padding = 'SAME'):
                           padding = padding)
 
 def dense(x, W, b):
-    fc = tf.reshape(x, [-1, W.get_shape().as_list()[0]])
-    fc = tf.add(tf.matmul(fc, W), b)
+    fc = tf.add(tf.matmul(x, W), b)
     return tf.nn.relu(fc)
 
 class CNN:
@@ -72,7 +72,8 @@ class CNN:
                 self.layers[layer] = pool2d(self.layers[prev_layer], filter_size, stride, padding)
 
             elif 'reshape' in layer:
-                continue
+                shape_ = np.product(self.layers[prev_layer].get_shape().as_list()[1 : ])
+                self.layers[layer] = tf.reshape(self.layers[prev_layer], [-1, shape_])
 
             elif 'dropout' in layer:
                 prob = item['prob']

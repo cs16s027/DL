@@ -84,7 +84,7 @@ def train():
     valid_log = setup_logger('valid-log', os.path.join(logs_path, valid_log_name))
 
     # GPU config
-    gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.2)
+    gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction = 0.5)
 
     # Train
     num_epochs = 20

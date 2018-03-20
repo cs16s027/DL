@@ -13,12 +13,15 @@ import json
 def generateModelFile(modelfile):
     model = [ ('input', {'num_neurons' : 784}),
               ('conv1', {'filter_size' : 5, 'num_filters' : 16, 'stride' : 1, 'padding' : 'SAME'}),
+              ('batchnorm', ()),
               ('conv2', {'filter_size' : 5, 'num_filters' : 32, 'stride' : 2, 'padding' : 'SAME'}),
+              ('batchnorm', ()),
               ('conv3', {'filter_size' : 3, 'num_filters' : 64, 'stride' : 1, 'padding' : 'SAME'}),
+              ('batchnorm', ()),
               ('conv4', {'filter_size' : 3, 'num_filters' : 32, 'stride' : 2, 'padding' : 'SAME'}),
+              ('batchnorm', ()),
               ('conv5', {'filter_size' : 3, 'num_filters' : 16, 'stride' : 1, 'padding' : 'SAME'}),
               ('reshape', ()),
-              ('fc1'  , {'num_neurons' : 64}),
               ('output', {'num_neurons' : 10})
             ]
 
@@ -76,6 +79,9 @@ def loadArch(modelfile):
         elif 'dropout' in layer:
             arch_['prob'] = 0.5
 
+        elif 'batchnorm' in layer:
+            pass
+
         elif 'fc' in layer:
             weight, bias = 'Wd{}'.format(c_fc), 'bd{}'.format(c_fc)
             in_depth = out_depth
@@ -103,4 +109,4 @@ def loadArch(modelfile):
     return arch
 
 if __name__ == '__main__':
-    generateModelFile('models/1.json')
+    generateModelFile('models/2.json')
