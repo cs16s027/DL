@@ -10,6 +10,7 @@ import tensorflow as tf
 
 from data import loadData
 from network import CNN
+from augment import Augment
 from modelparser import loadArch
 
 def memory_limit():
@@ -103,7 +104,7 @@ def train():
             train_X, train_Y = train_X[indices], train_Y[indices]
             for batch in range(num_batches):
                 start, end = batch * batch_size, (batch + 1) * batch_size
-                x, y = train_X[range(start, end)], train_Y[range(start, end)]
+                x, y = Augment(train_X[range(start, end)]).batch, train_Y[range(start, end)]
                 try:
                     model.step(x,y)
                 except MemoryError:

@@ -23,7 +23,7 @@ def normalizationParams(X):
 
 def loadData(train_path, valid_path, test_path):
     stages = ['train', 'valid', 'test']
-    normalize = True
+    normalize = False
     data_path = 'data'
     if os.path.isfile(os.path.join(data_path, 'train_X.npy')) == False:
         train_X, train_Y = loadFromCSV(train_path)
