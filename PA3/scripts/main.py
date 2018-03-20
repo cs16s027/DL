@@ -129,7 +129,8 @@ def train():
                     early_stop += 1
                     if (early_stop >= patience):
                         print "No improvement in validation loss for " + str(patience) + " steps - stopping training!"
-                        break
+                        print("Optimization Finished!")
+                        return 1
                     loss_history.append(valid_loss)
         print("Optimization Finished!")
 
