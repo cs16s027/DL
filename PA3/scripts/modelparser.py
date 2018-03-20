@@ -13,15 +13,22 @@ import json
 def generateModelFile(modelfile):
     model = [ ('input', {'num_neurons' : 784}),
               ('conv1', {'filter_size' : 5, 'num_filters' : 16, 'stride' : 1, 'padding' : 'SAME'}),
-              ('batchnorm', ()),
-              ('conv2', {'filter_size' : 5, 'num_filters' : 32, 'stride' : 2, 'padding' : 'SAME'}),
-              ('batchnorm', ()),
+              ('batchnorm1', ()),
+              ('conv2', {'filter_size' : 5, 'num_filters' : 32, 'stride' : 1, 'padding' : 'SAME'}),
+              ('pool1', {'filter_size' : 2, 'stride' : 2, 'padding' : 'SAME'}),
+              ('dropout1', {'prob' : 0.5}),
+              ('batchnorm2', ()),
               ('conv3', {'filter_size' : 3, 'num_filters' : 64, 'stride' : 1, 'padding' : 'SAME'}),
-              ('batchnorm', ()),
-              ('conv4', {'filter_size' : 3, 'num_filters' : 32, 'stride' : 2, 'padding' : 'SAME'}),
-              ('batchnorm', ()),
-              ('conv5', {'filter_size' : 3, 'num_filters' : 16, 'stride' : 1, 'padding' : 'SAME'}),
+              ('batchnorm3', ()),
+              ('conv4', {'filter_size' : 3, 'num_filters' : 32, 'stride' : 1, 'padding' : 'SAME'}),
+              ('pool2', {'filter_size' : 2, 'stride' : 2, 'padding' : 'SAME'}),
+              ('dropout2', {'prob' : 0.5}),
+              ('batchnorm4', ()),
               ('reshape', ()),
+              ('fc1', {'num_neurons' : 512}),
+              ('dropout3', {'prob' : 0.5}),
+              ('batchnorm5', ()),
+              ('fc2', {'num_neurons' : 64}),
               ('output', {'num_neurons' : 10})
             ]
 
@@ -109,4 +116,4 @@ def loadArch(modelfile):
     return arch
 
 if __name__ == '__main__':
-    generateModelFile('models/2.json')
+    generateModelFile('models/3.json')

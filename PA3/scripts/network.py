@@ -89,7 +89,6 @@ class CNN:
                 logits = tf.add(tf.matmul(self.layers[prev_layer], self.params['Wout']), self.params['bout'])
                 self.layers[layer] = logits
                 y_pred =  tf.nn.softmax(logits)
-                loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=self.y))
 
             else:
                 print "Invalid architecture!"
