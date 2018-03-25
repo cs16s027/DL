@@ -10,7 +10,8 @@ class Augment:
 
     def translate(self, image):
         # Translate
-        x, y = np.random.uniform(-7, 7, 2)
+        x, y = np.random.uniform(-10, 10, 2)
+        y = 0
         trans_mat = np.float32([[1, 0, x], [0, 1, y]])
         return cv2.warpAffine(image, trans_mat, (28, 28))
 
@@ -33,11 +34,11 @@ class Augment:
         images = np.copy(images).reshape((-1, 28, 28))
         batch = np.zeros_like(images)
         for index in range(images.shape[0]):
-            if np.random.uniform(0, 1) < 0.75:
+            if np.random.uniform(0, 1) < 0.1:
                 batch[index, :, :] = images[index, :, :]
             else:
-                num = np.random.randint(1, 5)
-                augs = np.random.choice([self.translate, self.rotate, self.flipVertical, self.dropout], num, replace = False)
+                num = np.random.randint(1, 4)
+                augs = np.random.choice([self.translate, self.flipVertical, self.dropout], num, replace = False)
                 image_ = np.copy(images[index])
                 for aug in augs:
                     image_ = aug(image_)

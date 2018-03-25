@@ -12,11 +12,11 @@ import json
 
 def generateModelFile(modelfile):
     model = [ ('input', {'num_neurons' : 784}),
-              ('conv1', {'filter_size' : 5, 'num_filters' : 16, 'stride' : 2, 'padding' : 'SAME'}),
-              ('conv2', {'filter_size' : 5, 'num_filters' : 32, 'stride' : 2, 'padding' : 'SAME'}),
+              ('conv1', {'filter_size' : 3, 'num_filters' : 16, 'stride' : 2, 'padding' : 'SAME'}),
+              ('conv2', {'filter_size' : 3, 'num_filters' : 16, 'stride' : 2, 'padding' : 'SAME'}),
               ('reshape', ()),
-              ('fc1', {'num_neurons' : 512}),
-              ('fc2', {'num_neurons' : 64}),
+              ('fc1', {'num_neurons' : 200}),
+              ('fc2', {'num_neurons' : 200}),
               ('output', {'num_neurons' : 10})
             ]
 
@@ -104,4 +104,4 @@ def loadArch(modelfile):
     return arch
 
 if __name__ == '__main__':
-    generateModelFile('models/1.json')
+    generateModelFile('models/2.json')
