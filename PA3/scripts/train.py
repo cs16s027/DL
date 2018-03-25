@@ -27,18 +27,16 @@ def get_memory():
     return free_memory
 
 # Test model on data after every epoch
-def test(model, x, y, epoch, batch_size, is_train):
-    print 'Testing for epoch {}'.format(epoch)
+def testModel(model, x, y, batch_size):
     num_batches = x.shape[0] / batch_size
     loss, acc = np.zeros((num_batches)), np.zeros((num_batches))
     for batch in range(num_batches):
         start, end = batch * batch_size, (batch + 1) * batch_size
         batch_x, batch_y = x[start : end], y[start : end]
-        idx = epoch*num_batches + batch
-        loss[batch], acc[batch] = model.performance(batch_x, batch_y, is_train, idx)
+        loss[batch], acc[batch] = model.performance(batch_x, batch_y)
     return np.mean(loss), np.mean(acc)
 
-def train():
+def trainModel():
     # Parse args
     parser = argparse.ArgumentParser(description='Train the CNN')
     parser.add_argument('--expt_dir', default='./logs',
@@ -67,6 +65,9 @@ def train():
     train_path, valid_path, test_path = args.train, args.val, args.test
     logs_path = args.expt_dir
     model_path, model_arch, model_name = args.save_dir, args.arch, args.model_name
+    model_path = os.path.join(model_path, model_name)
+    if not os.path.isdir(model_path):
+        os.mkdir(model_path)
     lr, batch_size, init = float(args.lr), int(args.batch_size), int(args.init)
 
     data = loadData(train_path, valid_path, test_path)
@@ -90,7 +91,7 @@ def train():
     num_epochs = 500
     num_batches = int(float(train_X.shape[0]) / batch_size)
     steps = 0
-    patience = 500
+    patience = 100
     early_stop=0
 
     with tf.Session(config = tf.ConfigProto(gpu_options=gpu_options)) as session:
@@ -113,19 +114,20 @@ def train():
                 steps += batch_size
                 if steps % train_X.shape[0] == 0 and steps != 0:
                     try:
-                        train_loss, train_acc = test(model, train_X, train_Y, epoch, batch_size, True)
+                        train_loss, train_acc = testModel(model, train_X, train_Y, batch_size)
                     except MemoryError:
                         print 'Memory error in test for train'
                         exit()
                     train_log.info('Epoch {}, Step {}, Loss: {}, Accuracy: {}, lr: {}'.format(epoch, steps, train_loss, train_acc, model.lr))
                     try:
-                        valid_loss, valid_acc = test(model, valid_X, valid_Y, epoch, batch_size, False)               
+                        valid_loss, valid_acc = testModel(model, valid_X, valid_Y, batch_size)               
                     except MemoryError:
                         print 'Memory error in test for valid'
                         exit()
                     valid_log.info('Epoch {}, Step {}, Loss: {}, Accuracy: {}, lr: {}'.format(epoch, steps, valid_loss, valid_acc, model.lr))
                     if valid_loss < min(loss_history):
-                        model.save(os.path.join(model_path, model_name))
+                        save_path = os.path.join(model_path, 'model')
+                        model.save(save_path)
                         early_stop = 0
                     early_stop += 1
                     if (early_stop >= patience):
@@ -137,5 +139,5 @@ def train():
 
 if __name__ == '__main__':
     memory_limit()
-    train()
+    trainModel()
 			

@@ -23,7 +23,6 @@ class Augment:
         return cv2.flip(image, 1)
 
     def dropout(self, image, p = 0.3):
-        p = np.random.uniform(0, p)
         pixeld = int(p * 784)
         image_ = image.reshape((784))
         drop = np.random.randint(0, 784, pixeld) 
@@ -34,7 +33,7 @@ class Augment:
         images = np.copy(images).reshape((-1, 28, 28))
         batch = np.zeros_like(images)
         for index in range(images.shape[0]):
-            if np.random.uniform(0, 1) < 0.3:
+            if np.random.uniform(0, 1) < 0.75:
                 batch[index, :, :] = images[index, :, :]
             else:
                 num = np.random.randint(1, 5)

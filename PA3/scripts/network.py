@@ -1,6 +1,6 @@
+import sys, os
 import tensorflow as tf
 import numpy as np
-import sys
 
 def conv2d(x, W, b, strides=1, padding = 'SAME'):
     x = tf.nn.conv2d(x, W, strides = [1, strides, strides, 1], padding = padding)
@@ -17,13 +17,12 @@ def dense(x, W, b):
 
 class CNN:
 
-    def __init__(self, arch, session, logs_path, initializer = 1, lr = 0.001, quiet = True):
+    def __init__(self, arch, session, logs_path, initializer = 1, lr = 0.001):
         self.params = {}
         self.layers = {}
         self.arch = arch
         self.lr = lr
         self.logs_path = logs_path
-        self.quiet = quiet
         # Initializers
         # He 
         if initializer == 2:
@@ -50,6 +49,7 @@ class CNN:
     def build_graph(self):
         self.x = tf.placeholder(tf.float32, shape=[None, 784], name='input_data')
         self.y = tf.placeholder(tf.float32, shape=[None, 10], name='input_labels')
+        self.keep_prob = tf.placeholder(tf.float32)
 
         prev_layer = ''
         for index, item in enumerate(self.arch):
@@ -76,8 +76,8 @@ class CNN:
                 self.layers[layer] = tf.reshape(self.layers[prev_layer], [-1, shape_])
 
             elif 'dropout' in layer:
-                prob = item['prob']
-                self.layers[layer] = tf.nn.dropout(self.layers[prev_layer], keep_prob=prob)
+                self.prob = item['prob']
+                self.layers[layer] = tf.nn.dropout(self.layers[prev_layer], self.keep_prob)
 
             elif 'batchnorm' in layer:
                 self.layers[layer] = tf.contrib.layers.batch_norm(self.layers[prev_layer])
@@ -101,32 +101,23 @@ class CNN:
         self.loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=self.y))
         optimizer = tf.train.AdamOptimizer(learning_rate = self.lr)
         self.train_op = optimizer.minimize(self.loss)
-        correct_pred = tf.equal(tf.argmax(y_pred, 1), tf.argmax(self.y, 1))
+        self.predictions = tf.argmax(y_pred, 1)
+        correct_pred = tf.equal(self.predictions, tf.argmax(self.y, 1))
         self.accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
         init = tf.global_variables_initializer()
-        # TensorBoard summaries
-        self.train_loss = tf.summary.scalar("train_loss", self.loss)
-        self.valid_loss = tf.summary.scalar("valid_loss", self.loss)
-        self.train_acc = tf.summary.scalar("train_accuracy", self.accuracy)
-        self.valid_acc = tf.summary.scalar("valid_accuracy", self.accuracy)
         self.sess.run(init)
-        if not self.quiet:
-            self.summary_writer = tf.summary.FileWriter(self.logs_path, graph=tf.get_default_graph())
 
     def step(self, batch_x, batch_y):
-        self.sess.run(self.train_op, feed_dict = {self.x: batch_x, self.y: batch_y})
+        self.sess.run(self.train_op, feed_dict = {self.x: batch_x, self.y: batch_y, self.keep_prob : self.prob})
 
-    def performance(self, batch_x, batch_y, is_train, idx):
-        if is_train == True:
-            loss, acc, loss_summary, accuracy_summary = self.sess.run([self.loss, self.accuracy, self.train_loss, self.train_acc],
-                                                                       feed_dict={self.x: batch_x, self.y: batch_y})
-        else:
-            loss, acc, loss_summary, accuracy_summary = self.sess.run([self.loss, self.accuracy, self.valid_loss, self.valid_acc],
-                                                                       feed_dict={self.x: batch_x, self.y: batch_y})
-        if not self.quiet:
-            self.summary_writer.add_summary(loss_summary, idx)
-            self.summary_writer.add_summary(accuracy_summary, idx)
+    def performance(self, batch_x, batch_y):
+        loss, acc = self.sess.run([self.loss, self.accuracy],
+                                   feed_dict={self.x: batch_x, self.y: batch_y, self.keep_prob : 1.0})
         return loss, acc
+
+    def getPredictions(self, batch_x, batch_y):
+        return self.sess.run([self.predictions], 
+                                     feed_dict = {self.x : batch_x, self.y : batch_y, self.keep_prob : 1.0}) 
 
     def save(self, save_path):
         saver = tf.train.Saver()
@@ -134,4 +125,5 @@ class CNN:
 
     def load(self, load_path):
         saver = tf.train.Saver()
-        saver.restore(self.sess, load_path)
+        saver.restore(self.sess, os.path.join(load_path, 'model'))
+
