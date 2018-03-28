@@ -1,4 +1,5 @@
 import json
+from math import ceil
 
 
 '''
@@ -12,11 +13,20 @@ import json
 
 def generateModelFile(modelfile):
     model = [ ('input', {'num_neurons' : 784}),
-              ('conv1', {'filter_size' : 3, 'num_filters' : 16, 'stride' : 2, 'padding' : 'SAME'}),
-              ('conv2', {'filter_size' : 3, 'num_filters' : 16, 'stride' : 2, 'padding' : 'SAME'}),
+              ('conv1', {'filter_size' : 3, 'num_filters' : 64, 'stride' : 1, 'padding' : 'SAME'}),
+              ('pool1', {'filter_size' : 2, 'padding' : 'SAME', 'stride' : 2}),
+              ('conv2', {'filter_size' : 3, 'num_filters' : 128, 'stride' : 1, 'padding' : 'SAME'}),
+              ('dropout', {'prob' : 0.5}),
+              ('conv3', {'filter_size' : 3, 'num_filters' : 128, 'stride' : 1, 'padding' : 'SAME'}),
+              ('pool2', {'filter_size' : 2, 'padding' : 'SAME', 'stride' : 2}),
+              ('conv4', {'filter_size' : 3, 'num_filters' : 256, 'stride' : 1, 'padding' : 'SAME'}),
+              ('conv5', {'filter_size' : 3, 'num_filters' : 256, 'stride' : 1, 'padding' : 'SAME'}),
+              ('pool3', {'filter_size' : 2, 'padding' : 'SAME', 'stride' : 2}),
               ('reshape', ()),
-              ('fc1', {'num_neurons' : 200}),
-              ('fc2', {'num_neurons' : 200}),
+              ('fc1', {'num_neurons' : 1024}),
+              ('dropout', {'prob' : 0.5}),
+              ('fc2', {'num_neurons' : 1024}),
+              ('batchnorm', ()),
               ('output', {'num_neurons' : 10})
             ]
 
@@ -61,7 +71,7 @@ def loadArch(modelfile):
             padding = spec['padding']
             stride = spec['stride']           
 
-            spatial /= stride
+            spatial = int(ceil(float(spatial) / stride))
 
             ### 
             arch_['filter_size'] = filter_size
@@ -100,8 +110,10 @@ def loadArch(modelfile):
                               }
             
         arch.append(arch_)
+        print layer, spatial
 
     return arch
 
 if __name__ == '__main__':
-    generateModelFile('models/2.json')
+    generateModelFile('exps/models/master_5conv_bn_2dropout.json')
+    loadArch('exps/models/master_5conv_bn_2dropout.json')

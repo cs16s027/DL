@@ -85,14 +85,14 @@ def trainModel():
     valid_log = setup_logger('valid-log', os.path.join(logs_path, valid_log_name))
 
     # GPU config
-    gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction = 0.5)
+    gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction = 1.0)
 
     # Train
-    num_epochs = 500
+    num_epochs = 50
     num_batches = int(float(train_X.shape[0]) / batch_size)
     steps = 0
-    patience = 100
-    early_stop=0
+    patience = 50
+    early_stop = 0
 
     with tf.Session(config = tf.ConfigProto(gpu_options=gpu_options)) as session:
         model = CNN(arch, session, logs_path, init, lr)

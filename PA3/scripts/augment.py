@@ -34,7 +34,7 @@ class Augment:
         images = np.copy(images).reshape((-1, 28, 28))
         batch = np.zeros_like(images)
         for index in range(images.shape[0]):
-            if np.random.uniform(0, 1) < 0.1:
+            if np.random.uniform(0, 1) < 0.3:
                 batch[index, :, :] = images[index, :, :]
             else:
                 num = np.random.randint(1, 4)

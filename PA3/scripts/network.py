@@ -50,6 +50,7 @@ class CNN:
         self.x = tf.placeholder(tf.float32, shape=[None, 784], name='input_data')
         self.y = tf.placeholder(tf.float32, shape=[None, 10], name='input_labels')
         self.keep_prob = tf.placeholder(tf.float32)
+        self.prob = 1.0
 
         prev_layer = ''
         for index, item in enumerate(self.arch):
