@@ -16,7 +16,7 @@ def plot(points, plot_name, plot_title):
     fig = plt.figure(0)
     ax = fig.gca()
     # Label the graph
-    ax.set_title('{} loss for different optimizers'.format(plot_title))
+    ax.set_title('{} loss for different learning rates'.format(plot_title))
     ax.set_xlabel('Epoch')
     ax.set_ylabel('Loss')
     # Set limits
@@ -40,11 +40,11 @@ def plot(points, plot_name, plot_title):
 _, stage, plot_name = sys.argv
 
 points = {}
-for item in os.listdir('logs/problem_5'):
+for item in os.listdir('exps/logs/lr'):
     stage_ = item.split('.')[-2]
-    opt = item.split('-')[6]
+    opt = item.split('.')[0].split('_')[-1]
     if stage.lower() == stage_:
-        points[opt] = loadLog(os.path.join('logs/problem_5', item))
+        points[opt] = loadLog(os.path.join('exps/logs/lr', item))
     
 plot(points, plot_name, stage)
 

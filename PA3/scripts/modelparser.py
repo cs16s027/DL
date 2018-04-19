@@ -16,17 +16,13 @@ def generateModelFile(modelfile):
               ('conv1', {'filter_size' : 3, 'num_filters' : 64, 'stride' : 1, 'padding' : 'SAME'}),
               ('pool1', {'filter_size' : 2, 'padding' : 'SAME', 'stride' : 2}),
               ('conv2', {'filter_size' : 3, 'num_filters' : 128, 'stride' : 1, 'padding' : 'SAME'}),
-              ('dropout', {'prob' : 0.5}),
-              ('conv3', {'filter_size' : 3, 'num_filters' : 128, 'stride' : 1, 'padding' : 'SAME'}),
               ('pool2', {'filter_size' : 2, 'padding' : 'SAME', 'stride' : 2}),
+              ('conv3', {'filter_size' : 3, 'num_filters' : 256, 'stride' : 1, 'padding' : 'SAME'}),
               ('conv4', {'filter_size' : 3, 'num_filters' : 256, 'stride' : 1, 'padding' : 'SAME'}),
-              ('conv5', {'filter_size' : 3, 'num_filters' : 256, 'stride' : 1, 'padding' : 'SAME'}),
               ('pool3', {'filter_size' : 2, 'padding' : 'SAME', 'stride' : 2}),
               ('reshape', ()),
               ('fc1', {'num_neurons' : 1024}),
-              ('dropout', {'prob' : 0.5}),
               ('fc2', {'num_neurons' : 1024}),
-              ('batchnorm', ()),
               ('output', {'num_neurons' : 10})
             ]
 
@@ -115,5 +111,5 @@ def loadArch(modelfile):
     return arch
 
 if __name__ == '__main__':
-    generateModelFile('exps/models/master_5conv_bn_2dropout.json')
-    loadArch('exps/models/master_5conv_bn_2dropout.json')
+    generateModelFile('exps/models/master.json')
+    loadArch('exps/models/master.json')

@@ -88,7 +88,7 @@ def trainModel():
     gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction = 1.0)
 
     # Train
-    num_epochs = 50
+    num_epochs = 100
     num_batches = int(float(train_X.shape[0]) / batch_size)
     steps = 0
     patience = 50

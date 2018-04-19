@@ -90,9 +90,11 @@ gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction = 0.5)
 with tf.Session(config = tf.ConfigProto(gpu_options=gpu_options)) as session:
     np.random.seed(100)
     model = CNN(arch, session, logs_path, init, lr)
-    conv1_before = session.run([model.params['Wc1']])
     model.load(model_path)
-    conv1_after = session.run([model.params['Wc1']])
+    for param in model.params.keys():
+        param_weights = session.run([model.params[param]])[0]
+        print param, param_weights.shape
+    exit()
     predictions = testInBatches(model, test_X, test_Y, batch_size)
     results_file = os.path.join(model_path, 'results.txt')
     writePredictions(predictions, results_file)
