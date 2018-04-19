@@ -13,10 +13,10 @@ def encodeData(corpus, vocab):
     MAX_LENGTH = 150
     num_lines = len(lines)
 
-    encoded_lines = np.zeros((num_lines, MAX_LENGTH), dtype = np.int16)
+    encoded_lines = np.zeros((num_lines, MAX_LENGTH), dtype = np.int32)
     for index, line in enumerate(lines):
         tokens = [token.lower() for token in line.split()]
-        seq = np.int16([vocab_dict[token] for token in tokens] + [1])
+        seq = np.int32([vocab_dict[token] for token in tokens] + [1])
         encoded_lines[index, : seq.shape[0]] = seq
 
     return encoded_lines
