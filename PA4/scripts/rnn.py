@@ -2,27 +2,31 @@ import numpy as np
 import tensorflow as tf
 
 # HYPERPARAMS
-encoder_vocab_size = 255 + 1 # tokens + (padding?)
+encoder_vocab_size = 255 + 0 # tokens + (padding?)
 encoder_embedding_size = 128
 encoder_hidden_size = 256
+
+decoder_vocab_size = 519 + 0 # tokens + (padding?)
+decoder_embedding_size = 128
+decoder_hidden_size = 512
+
+learning_rate = 0.001
+batch_size = 32
+max_gradient_norm = 5.0
 
 tf.reset_default_graph()
 with tf.Session() as session:
 
+    # Encoder placeholders
     encoder_input = tf.placeholder(
                         name = 'encoder_input',
                         shape = (None, None),
                         dtype = tf.int32
     )
     encoder_input_length = tf.placeholder(
-                            name = 'encoder_inputs_length',
-                            shape = (None, ),
-                            dtype = tf.int32
-    )
-    decoder_target = tf.placeholder(
-                      name = 'decoder_target',
-                      shape = (None, None),
-                      dtype = tf.int32
+                           name = 'encoder_input_length',
+                           shape = (None, ),
+                           dtype = tf.int32
     )
 
     # Encoder embedding
@@ -60,6 +64,90 @@ with tf.Session() as session:
     encoder_state = tf.nn.rnn_cell.LSTMStateTuple(
                     c = encoder_state_c,
                     h = encoder_state_h
+    )
+
+
+    # Decoder placeholders
+
+    decoder_input = tf.placeholder(
+                    name = 'decoder_input',
+                    shape = (None, None),
+                    dtype = tf.int32
+    )
+    decoder_input_length = tf.placeholder(
+                           name = 'decoder_input_length',
+                           shape = (None, ),
+                           dtype = tf.int32
+    )
+    decoder_output = tf.placeholder(
+                    name = 'decoder_output',
+                    shape = (None, None),
+                    dtype = tf.int32
+    )
+    decoder_mask = tf.placeholder(
+                    name = 'decoder_mask',
+                    shape = (None, None),
+                    dtype = tf.float32
+    )
+
+    # Decoder embedding
+
+    decoder_embedding = tf.get_variable(
+                        name = 'decoder_embedding',
+                        shape = [decoder_vocab_size, decoder_embedding_size],
+                        dtype = tf.float32,
+                        initializer = tf.random_normal_initializer()
+    )
+
+    decoder_embedding_input = tf.nn.embedding_lookup(
+                              decoder_embedding,
+                              decoder_input
+    )
+
+    #### Decoder ####
+    # Decoder cell
+    decoder_cell = tf.nn.rnn_cell.LSTMCell(decoder_hidden_size)
+    # FC layer for decoder vocab
+    projection_layer = tf.layers.Dense(
+                   units = decoder_vocab_size,
+                   kernel_initializer = tf.random_normal_initializer()
+    )
+    # Helper
+    helper = tf.contrib.seq2seq.TrainingHelper(
+             inputs = decoder_embedding_input,
+             sequence_length = decoder_input_length,
+             time_major = True)
+    # Basic decoder object
+    decoder = tf.contrib.seq2seq.BasicDecoder(
+              decoder_cell,
+              helper,
+              encoder_state,
+              output_layer = projection_layer
+    )
+    # Output of decoder
+    output = tf.contrib.seq2seq.dynamic_decode(
+                 decoder,
+                 output_time_major = True,
+    )[0]
+    logits = output.rnn_output
+
+    cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(
+               labels = decoder_output,
+               logits=logits)
+    train_loss = (tf.reduce_sum(cross_entropy * decoder_mask) /
+    batch_size)
+
+    # Calculate and clip gradients
+    params = tf.trainable_variables()
+    gradients = tf.gradients(train_loss, params)
+    clipped_gradients, _ = tf.clip_by_global_norm(
+                           gradients, max_gradient_norm
+    )
+
+    # Optimization
+    optimizer = tf.train.AdamOptimizer(learning_rate)
+    update_step = optimizer.apply_gradients(
+                  zip(clipped_gradients, params)
     )
 
     session.run(tf.global_variables_initializer())
