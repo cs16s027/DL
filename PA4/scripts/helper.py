@@ -26,7 +26,7 @@ def extract_vocab(data, extras):
         if token_dict[token] >= 1:
             words.append(token)
     for extra in extras:
-        words.append(token)
+        words.append(extra)
 
     special_words = ['<pad>', '<unk>', '<go>',  '<eos>']
     set_words = set(words)
@@ -60,3 +60,7 @@ def get_batches(targets, sources, batch_size, source_pad_int, target_pad_int):
             pad_source_lengths.append(len(source))
 
         yield pad_targets_batch, pad_sources_batch, pad_targets_lengths, pad_source_lengths
+
+def source_to_seq(text, source_word_to_int, sequence_length = 50):
+    '''Prepare the text for the model'''
+    return [source_word_to_int.get(word, source_word_to_int['<unk>']) for word in text]+ [source_word_to_int['<pad>']]*(sequence_length-len(text))
