@@ -22,23 +22,25 @@ target_int_to_word, target_word_to_int = helper.extract_vocab(target_sentences, 
 source_word_ids = [[source_word_to_int.get(word.lower(), source_word_to_int['<unk>']) for word in line.split()] for line in source_sentences]
 target_word_ids = [[target_word_to_int.get(word.lower(), target_word_to_int['<unk>']) for word in line.split()] + [target_word_to_int['<eos>']] for line in target_sentences]
 
+'''
 print("Example source sequence")
 print(source_word_ids[:3])
 print("\n")
 print("Example target sequence")
 print(target_word_ids[:3])
-
+'''
 # Number of Epochs
-epochs = 60
+epochs = 1
 # Batch Size
-batch_size = 128
+batch_size = 16
 # RNN Size
-rnn_size = 50
+enc_rnn_size = 256
+dec_rnn_size = 512
 # Number of Layers
-num_layers = 2
+num_layers = 1
 # Embedding Size
-encoding_embedding_size = 15
-decoding_embedding_size = 15
+encoding_embedding_size = 256
+decoding_embedding_size = 256
 # Learning Rate
 learning_rate = 0.001
 
@@ -62,6 +64,7 @@ def encoding_layer(input_data, rnn_size, num_layers,
     # Encoder embedding
     enc_embed_input = tf.contrib.layers.embed_sequence(input_data, source_vocab_size, encoding_embedding_size)
 
+    '''
     # RNN cell
     def make_cell(rnn_size):
         enc_cell = tf.contrib.rnn.LSTMCell(rnn_size,
@@ -71,8 +74,34 @@ def encoding_layer(input_data, rnn_size, num_layers,
     enc_cell = tf.contrib.rnn.MultiRNNCell([make_cell(rnn_size) for _ in range(num_layers)])
 
     enc_output, enc_state = tf.nn.dynamic_rnn(enc_cell, enc_embed_input, sequence_length=source_sequence_length, dtype=tf.float32)
+    '''
+    #'''
+    ###########
+    # Encoder cell
+    encoder_cell = tf.contrib.rnn.LSTMCell(rnn_size, initializer=tf.random_uniform_initializer(-0.1, 0.1, seed=2), state_is_tuple = True)
+    # Biderectional LSTM layer
+    ((encoder_fw_output, encoder_bw_output),
+    (encoder_fw_state, encoder_bw_state)) = tf.nn.bidirectional_dynamic_rnn(
+                                            encoder_cell,
+                                            encoder_cell,
+                                            enc_embed_input,
+                                            sequence_length = source_sequence_length,
+                                            dtype = tf.float32
+    )
 
-    return enc_output, enc_state
+    # Encoder output
+    enc_output = tf.concat((encoder_fw_output, encoder_bw_output), 2)
+    # Encoder state
+    encoder_state_c = tf.concat((encoder_fw_state.c, encoder_bw_state.c), 1)
+    encoder_state_h = tf.concat((encoder_fw_state.h, encoder_bw_state.h), 1)
+    enc_state = tf.contrib.rnn.LSTMStateTuple(
+                    c = encoder_state_c,
+                    h = encoder_state_h,
+    )
+
+    ##############
+    #'''
+    return enc_output, tuple([enc_state])
 
 # Process the input we'll feed to the decoder
 def process_decoder_input(target_data, vocab_to_int, batch_size):
@@ -152,16 +181,17 @@ def seq2seq_model(input_data, targets, lr, target_sequence_length,
                   max_target_sequence_length, source_sequence_length,
                   source_vocab_size, target_vocab_size,
                   enc_embedding_size, dec_embedding_size,
-                  rnn_size, num_layers):
+                  enc_rnn_size, dec_rnn_size, num_layers):
 
     # Pass the input data through the encoder. We'll ignore the encoder output, but use the state
     _, enc_state = encoding_layer(input_data,
-                                  rnn_size,
+                                  enc_rnn_size,
                                   num_layers,
                                   source_sequence_length,
                                   source_vocab_size,
                                   encoding_embedding_size)
 
+    print (enc_state)
 
     # Prepare the target sequences we'll feed to the decoder in training mode
     dec_input = process_decoder_input(targets, target_word_to_int, batch_size)
@@ -170,7 +200,7 @@ def seq2seq_model(input_data, targets, lr, target_sequence_length,
     training_decoder_output, inference_decoder_output = decoding_layer(target_word_to_int,
                                                                        decoding_embedding_size,
                                                                        num_layers,
-                                                                       rnn_size,
+                                                                       dec_rnn_size,
                                                                        target_sequence_length,
                                                                        max_target_sequence_length,
                                                                        enc_state,
@@ -197,7 +227,8 @@ with train_graph.as_default():
                                                                       len(target_word_to_int),
                                                                       encoding_embedding_size,
                                                                       decoding_embedding_size,
-                                                                      rnn_size,
+                                                                      enc_rnn_size,
+                                                                      dec_rnn_size,
                                                                       num_layers)
 
     # Create tensors for the training logits and inference logits
@@ -259,7 +290,7 @@ valid_target = target_word_ids[:batch_size]
 
 display_step = 20 # Check training loss after every 20 batches
 
-checkpoint = "best_model.ckpt"
+checkpoint = "./models/best.ckpt"
 with tf.Session(graph=train_graph) as sess:
     sess.run(tf.global_variables_initializer())
 
@@ -300,6 +331,7 @@ with tf.Session(graph=train_graph) as sess:
 
 
 
+
     # Save Model
     saver = tf.train.Saver()
     saver.save(sess, checkpoint)
@@ -307,14 +339,15 @@ with tf.Session(graph=train_graph) as sess:
 
 def source_to_seq(text):
     '''Prepare the text for the model'''
-    sequence_length = 7
+    sequence_length = 40
     return [source_word_to_int.get(word, source_word_to_int['<unk>']) for word in text]+ [source_word_to_int['<pad>']]*(sequence_length-len(text))
 
 
-input_sentence = 'hello'
+input_sentence = 'temperature time 6-21 min 33 mean 40 max 45 windChill time 6-21 min 28 mean 35 max 41 windSpeed time 6-21 min 3 mean 6 max 9 mode-bucket-0-20-2 0-10 windDir time 6-21 mode W gust time 6-21 min 0 mean 0 max 0 skyCover time 6-21 mode-bucket-0-100-4 0-25 skyCover time 6-9 mode-bucket-0-100-4 0-25 skyCover time 6-13 mode-bucket-0-100-4 0-25 skyCover time 9-21 mode-bucket-0-100-4 0-25 skyCover time 13-21 mode-bucket-0-100-4 0-25 precipPotential time 6-21 min 1 mean 2 max 7'.split()
+# Sunny , with a high near 46 . West wind between 6 and 9 mph .
 text = source_to_seq(input_sentence)
 
-checkpoint = "./best_model.ckpt"
+checkpoint = "./models/best.ckpt"
 
 loaded_graph = tf.Graph()
 
