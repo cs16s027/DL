@@ -1,6 +1,8 @@
 import numpy as np
 import h5py
 
+# <PAD> : 0, <EOS> : 1, <GO> : 2
+
 def encodeData(corpus, vocab):
     with open(corpus, 'r') as corpus_file:
         lines = [line.strip() for line in corpus_file.readlines()]

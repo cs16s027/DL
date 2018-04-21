@@ -2,16 +2,16 @@ import numpy as np
 import tensorflow as tf
 
 # HYPERPARAMS
-encoder_vocab_size = 255 + 0 # tokens + (padding?)
+encoder_vocab_size = 100
 encoder_embedding_size = 128
 encoder_hidden_size = 256
 
-decoder_vocab_size = 519 + 0 # tokens + (padding?)
+decoder_vocab_size = 100
 decoder_embedding_size = 128
 decoder_hidden_size = 512
 
 learning_rate = 0.001
-batch_size = 32
+batch_size = 1
 max_gradient_norm = 5.0
 
 tf.reset_default_graph()
@@ -133,7 +133,7 @@ with tf.Session() as session:
 
     cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(
                labels = decoder_output,
-               logits=logits)
+               logits = logits)
     train_loss = (tf.reduce_sum(cross_entropy * decoder_mask) /
     batch_size)
 
@@ -146,8 +146,21 @@ with tf.Session() as session:
 
     # Optimization
     optimizer = tf.train.AdamOptimizer(learning_rate)
-    update_step = optimizer.apply_gradients(
+    train_op = optimizer.apply_gradients(
                   zip(clipped_gradients, params)
     )
 
     session.run(tf.global_variables_initializer())
+
+
+    _, loss = session.run(
+              [train_op, train_loss],
+              {
+                 encoder_input : np.int32([[1, 2, 3, 1, 0], [4, 1, 4, 0, 0]]).reshape((5, 2)),
+                 encoder_input_length : np.int32([4, 1]).reshape((2, )),
+                 decoder_input : np.int32([[2, 9, 5, 4, 4, 3, 0, 0], [2, 44, 2, 4, 0, 0, 0, 0]]).reshape((8, 2)),
+                 decoder_input_length : np.int32([6, 3]).reshape((2, )),
+                 decoder_mask : np.float32([[1, 1, 1, 1, 1, 1, 0, 0], [1, 1, 1, 1, 0, 0, 0, 0]]).reshape((8, 2)),
+                 decoder_output : np.int32([[9, 5, 4, 4, 3, 1, 0, 0], [44, 2, 4, 1, 0, 0, 0, 0]]).reshape((8, 2))
+              }
+    )
