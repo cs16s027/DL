@@ -133,13 +133,11 @@ def test(x, y):
 
 # Parameters for training
 # Number of Epochs
-epochs = 5
+epochs = 10
 # Number of datapoints
 size = len(train_source)
 # Number of batches
 num_batches = size / batch_size
-# Validation test after these many batches
-display_step = num_batches - 1
 # patience and early stopping
 patience = 50
 early_stop = 0
@@ -157,6 +155,21 @@ if MODE == 'TRAIN' or MODE == 'TRAIN,TEST':
             if early_stop == patience:
                 print 'End of optimization, stopping training'
                 break
+            ############ TEST #############
+            # Calculate training cost
+            train_loss = test(train_source, train_target)
+            train_log.info('Epoch {}, Loss: {}, lr: {}'.format(epoch_i, train_loss, learning_rate))
+            # Calculate validation cost
+            valid_loss = test(valid_source, valid_target)
+            valid_log.info('Epoch {}, Loss: {}, lr: {}'.format(epoch_i, valid_loss, learning_rate))
+            if valid_loss < min(loss_history):
+                # Save Model
+                saver.save(sess, checkpoint)
+                print('Model Trained and Saved')
+                early_stop = 0
+            loss_history.append(valid_loss)
+            early_stop += 1
+            ############ TRAIN #############
             for batch_i, (targets_batch, sources_batch, targets_lengths, sources_lengths) in enumerate(
                     helper.get_batches(train_target, train_source, batch_size,
                                source_word_to_int['<pad>'],
@@ -170,22 +183,6 @@ if MODE == 'TRAIN' or MODE == 'TRAIN,TEST':
                      lr: learning_rate,
                      target_sequence_length: targets_lengths,
                      source_sequence_length: sources_lengths})
-
-                # Debug message updating us on the status of the training
-                if batch_i == display_step:
-                    # Calculate training cost
-                    train_loss = test(train_source, train_target)
-                    train_log.info('Epoch {}, Batch {}, Loss: {}, lr: {}'.format(epoch, batch_i + 1, train_loss, learning_rate))
-                    # Calculate validation cost
-                    valid_loss = test(valid_source, valid_target)
-                    valid_log.info('Epoch {}, Batch {}, Loss: {}, lr: {}'.format(epoch, batch_i + 1, valid_loss, learning_rate))
-                    if valid_loss < min(loss_history):
-                        # Save Model
-                        saver.save(sess, checkpoint)
-                        print('Model Trained and Saved')
-                        early_stop = 0
-                    loss_history.append(valid_loss)
-                    early_stop += 1
 
 if MODE == 'TEST' or MODE == 'TRAIN,TEST':
     input_sentence = 'temperature time 6-21 min 33 mean 40 max 45 windChill time 6-21 min 28 mean 35 max 41 windSpeed time 6-21 min 3 mean 6 max 9 mode-bucket-0-20-2 0-10 windDir time 6-21 mode W gust time 6-21 min 0 mean 0 max 0 skyCover time 6-21 mode-bucket-0-100-4 0-25 skyCover time 6-9 mode-bucket-0-100-4 0-25 skyCover time 6-13 mode-bucket-0-100-4 0-25 skyCover time 9-21 mode-bucket-0-100-4 0-25 skyCover time 13-21 mode-bucket-0-100-4 0-25 precipPotential time 6-21 min 1 mean 2 max 7'.lower().split()
