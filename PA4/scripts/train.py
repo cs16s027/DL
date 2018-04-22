@@ -1,11 +1,30 @@
-import numpy as np
+import os
 import time
+import argparse
+
+import numpy as np
+
+import tensorflow as tf
+from tensorflow.python.layers.core import Dense
 
 import helper
 from rnn import RNN
 
-import tensorflow as tf
-from tensorflow.python.layers.core import Dense
+# Parse args
+parser = argparse.ArgumentParser(description='Train the RNN')
+parser.add_argument('--model_name', default = 'model',
+                    help = 'name of the model to save logs, weights')
+args = parser.parse_args()
+model_name = args.model_name
+# Logging
+model_path = os.path.join('./models', model_name)
+if not os.path.isdir(model_path):
+    os.mkdir(model_path)
+logs_path = './logs'
+train_log_name = '{}.train.log'.format(model_name)
+valid_log_name = '{}.valid.log'.format(model_name)
+train_log = helper.setup_logger('train-log', os.path.join(logs_path, train_log_name))
+valid_log = helper.setup_logger('valid-log', os.path.join(logs_path, valid_log_name))
 
 MODE = 'TRAIN,TEST'
 
@@ -26,8 +45,6 @@ source_word_ids = [[source_word_to_int.get(word.lower(), source_word_to_int['<un
 target_word_ids = [[target_word_to_int.get(word.lower(), target_word_to_int['<unk>']) for word in line.split()] + [target_word_to_int['<eos>']] for line in target_sentences]
 
 
-# Number of Epochs
-epochs = 1
 # Batch Size
 batch_size = 32
 # RNN Size
@@ -85,22 +102,61 @@ with train_graph.as_default():
 
 
 # Split data to training and validation sets
-train_source = source_word_ids[batch_size:]
-train_target = target_word_ids[batch_size:]
-valid_source = source_word_ids[:batch_size]
-valid_target = target_word_ids[:batch_size]
+# Convert words to ids
+train_source = [[source_word_to_int.get(word.lower(), source_word_to_int['<unk>']) for word in line.split()] for line in source_sentences]
+train_target = [[target_word_to_int.get(word.lower(), target_word_to_int['<unk>']) for word in line.split()] + [target_word_to_int['<eos>']] for line in target_sentences]
+source_path = 'data/dev/dev.combined'
+target_path = 'data/dev/summaries.txt'
+source_sentences = helper.load_data(source_path)
+target_sentences = helper.load_data(target_path)
+valid_source = [[source_word_to_int.get(word.lower(), source_word_to_int['<unk>']) for word in line.split()] for line in source_sentences]
+valid_target = [[target_word_to_int.get(word.lower(), target_word_to_int['<unk>']) for word in line.split()] + [target_word_to_int['<eos>']] for line in target_sentences]
 (valid_targets_batch, valid_sources_batch, valid_targets_lengths, valid_sources_lengths) = next(helper.get_batches(valid_target, valid_source, batch_size,
                            source_word_to_int['<pad>'],
                            target_word_to_int['<pad>']))
 
-display_step = 20 # Check training loss after every 20 batches
+def test(x, y):
+    epoch_loss = []
+    for batch_i, (y_batch, x_batch, y_lengths, x_lengths) in enumerate(
+            helper.get_batches(y, x, batch_size,
+                       source_word_to_int['<pad>'],
+                       target_word_to_int['<pad>'])):
+        loss = sess.run(
+            [cost],
+            {input_data: x_batch,
+             targets: y_batch,
+             lr: learning_rate,
+             target_sequence_length: y_lengths,
+             source_sequence_length: x_lengths})
+        epoch_loss.append(loss)
+    return np.mean(epoch_loss)
 
-checkpoint = "./models/best.ckpt"
+# Parameters for training
+# Number of Epochs
+epochs = 5
+# Number of datapoints
+size = len(train_source)
+# Number of batches
+num_batches = size / batch_size
+# Validation test after these many batches
+display_step = num_batches - 1
+# patience and early stopping
+patience = 50
+early_stop = 0
+loss_history = [np.inf]
+
+# Saver to save best model
+
+checkpoint = "{}/best.ckpt".format(model_path)
+
 if MODE == 'TRAIN' or MODE == 'TRAIN,TEST':
     with tf.Session(graph = train_graph) as sess:
         sess.run(tf.global_variables_initializer())
-
+        saver = tf.train.Saver()
         for epoch_i in range(1, epochs+1):
+            if early_stop == patience:
+                print 'End of optimization, stopping training'
+                break
             for batch_i, (targets_batch, sources_batch, targets_lengths, sources_lengths) in enumerate(
                     helper.get_batches(train_target, train_source, batch_size,
                                source_word_to_int['<pad>'],
@@ -116,37 +172,25 @@ if MODE == 'TRAIN' or MODE == 'TRAIN,TEST':
                      source_sequence_length: sources_lengths})
 
                 # Debug message updating us on the status of the training
-                if batch_i % display_step == 0 and batch_i > 0:
-
+                if batch_i == display_step:
+                    # Calculate training cost
+                    train_loss = test(train_source, train_target)
+                    train_log.info('Epoch {}, Batch {}, Loss: {}, lr: {}'.format(epoch, batch_i + 1, train_loss, learning_rate))
                     # Calculate validation cost
-                    validation_loss = sess.run(
-                    [cost],
-                    {input_data: valid_sources_batch,
-                     targets: valid_targets_batch,
-                     lr: learning_rate,
-                     target_sequence_length: valid_targets_lengths,
-                     source_sequence_length: valid_sources_lengths})
+                    valid_loss = test(valid_source, valid_target)
+                    valid_log.info('Epoch {}, Batch {}, Loss: {}, lr: {}'.format(epoch, batch_i + 1, valid_loss, learning_rate))
+                    if valid_loss < min(loss_history):
+                        # Save Model
+                        saver.save(sess, checkpoint)
+                        print('Model Trained and Saved')
+                        early_stop = 0
+                    loss_history.append(valid_loss)
+                    early_stop += 1
 
-                    print('Epoch {:>3}/{} Batch {:>4}/{} - Loss: {:>6.3f}  - Validation loss: {:>6.3f}'
-                          .format(epoch_i,
-                                  epochs,
-                                  batch_i,
-                                  len(train_source) // batch_size,
-                                  loss,
-                                  validation_loss[0]))
-
-
-        # Save Model
-        saver = tf.train.Saver()
-        saver.save(sess, checkpoint)
-        print('Model Trained and Saved')
-
-if MODE == 'TEST' or mode == 'TRAIN,TEST':
+if MODE == 'TEST' or MODE == 'TRAIN,TEST':
     input_sentence = 'temperature time 6-21 min 33 mean 40 max 45 windChill time 6-21 min 28 mean 35 max 41 windSpeed time 6-21 min 3 mean 6 max 9 mode-bucket-0-20-2 0-10 windDir time 6-21 mode W gust time 6-21 min 0 mean 0 max 0 skyCover time 6-21 mode-bucket-0-100-4 0-25 skyCover time 6-9 mode-bucket-0-100-4 0-25 skyCover time 6-13 mode-bucket-0-100-4 0-25 skyCover time 9-21 mode-bucket-0-100-4 0-25 skyCover time 13-21 mode-bucket-0-100-4 0-25 precipPotential time 6-21 min 1 mean 2 max 7'.lower().split()
     # Sunny , with a high near 46 . West wind between 6 and 9 mph .
     text = helper.source_to_seq(input_sentence, source_word_to_int, sequence_length = 50)
-
-    checkpoint = "./models/best.ckpt"
 
     loaded_graph = tf.Graph()
 
@@ -164,7 +208,6 @@ if MODE == 'TEST' or mode == 'TRAIN,TEST':
         answer_logits = sess.run(logits, {input_data: [text]*batch_size,
                                           target_sequence_length: [len(text)]*batch_size,
                                           source_sequence_length: [len(text)]*batch_size})[0]
-
 
     pad = source_word_to_int["<pad>"]
 

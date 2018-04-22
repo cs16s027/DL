@@ -32,7 +32,6 @@ class RNN:
 
         return input_data, targets, lr, target_sequence_length, max_target_sequence_length, source_sequence_length
 
-
     def encoding_layer(self, input_data, source_sequence_length):
 
         # Encoder embedding
