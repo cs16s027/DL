@@ -74,8 +74,8 @@ with train_graph.as_default():
                                                                       targets,
                                                                       target_sequence_length,
                                                                       max_target_sequence_length,
-                                                                      source_sequence_length
-                                                                      )
+                                                                      source_sequence_length)
+
 
     # Create tensors for the training logits and inference logits
     training_logits = tf.identity(training_decoder_output.rnn_output, 'logits')
@@ -185,10 +185,6 @@ if MODE == 'TRAIN' or MODE == 'TRAIN,TEST':
                      source_sequence_length: sources_lengths})
 
 if MODE == 'TEST' or MODE == 'TRAIN,TEST':
-    input_sentence = 'temperature time 6-21 min 33 mean 40 max 45 windChill time 6-21 min 28 mean 35 max 41 windSpeed time 6-21 min 3 mean 6 max 9 mode-bucket-0-20-2 0-10 windDir time 6-21 mode W gust time 6-21 min 0 mean 0 max 0 skyCover time 6-21 mode-bucket-0-100-4 0-25 skyCover time 6-9 mode-bucket-0-100-4 0-25 skyCover time 6-13 mode-bucket-0-100-4 0-25 skyCover time 9-21 mode-bucket-0-100-4 0-25 skyCover time 13-21 mode-bucket-0-100-4 0-25 precipPotential time 6-21 min 1 mean 2 max 7'.lower().split()
-    # Sunny , with a high near 46 . West wind between 6 and 9 mph .
-    text = helper.source_to_seq(input_sentence, source_word_to_int, sequence_length = 50)
-
     source_path = 'data/test/test.combined'
     source_sentences = helper.load_data(source_path)
     source_sentences = [[source_word_to_int.get(word.lower(), source_word_to_int['<unk>']) for word in line.split()] for line in source_sentences]
@@ -205,6 +201,7 @@ if MODE == 'TEST' or MODE == 'TRAIN,TEST':
         logits = loaded_graph.get_tensor_by_name('predictions:0')
         source_sequence_length = loaded_graph.get_tensor_by_name('source_sequence_length:0')
         target_sequence_length = loaded_graph.get_tensor_by_name('target_sequence_length:0')
+        keep_prob = loaded_graph.get_tensor_by_name('keep_prob:0')
 
         #Multiply by batch_size to match the model's input parameters
         pad = source_word_to_int["<pad>"]

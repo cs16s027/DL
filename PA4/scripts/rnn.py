@@ -40,6 +40,7 @@ class RNN:
         ###########
         # Encoder cell
         encoder_cell = tf.contrib.rnn.LSTMCell(self.enc_rnn_size, initializer=tf.random_uniform_initializer(-0.1, 0.1, seed=2), state_is_tuple = True)
+        encoder_cell = tf.contrib.rnn.DropoutWrapper(encoder_cell, output_keep_prob = 0.5)
         # Biderectional LSTM layer
         ((encoder_fw_output, encoder_bw_output),
         (encoder_fw_state, encoder_bw_state)) = tf.nn.bidirectional_dynamic_rnn(
@@ -77,6 +78,7 @@ class RNN:
         def make_cell(rnn_size):
             dec_cell = tf.contrib.rnn.LSTMCell(rnn_size,
                                                initializer=tf.random_uniform_initializer(-0.1, 0.1, seed=2))
+            dec_cell = tf.contrib.rnn.DropoutWrapper(dec_cell, output_keep_prob = 0.5)
             return dec_cell
 
         dec_cell = tf.contrib.rnn.MultiRNNCell([make_cell(self.dec_rnn_size) for _ in range(self.num_layers)])
@@ -125,9 +127,6 @@ class RNN:
             inference_decoder_output = tf.contrib.seq2seq.dynamic_decode(inference_decoder,
                                                                 impute_finished=True,
                                                                 maximum_iterations=max_target_sequence_length)[0]
-
-
-
         return training_decoder_output, inference_decoder_output
 
     def seq2seq_model(self, input_data, targets, target_sequence_length,
