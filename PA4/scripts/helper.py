@@ -14,7 +14,7 @@ def setup_logger(name, log_file, level=logging.INFO):
     logger.addHandler(handler)
 
     return logger
-    
+
 def load_data(path):
     input_file = os.path.join(path)
     with open(input_file, "r") as f:
@@ -77,4 +77,4 @@ def get_batches(targets, sources, batch_size, source_pad_int, target_pad_int):
 
 def source_to_seq(text, source_word_to_int, sequence_length = 50):
     '''Prepare the text for the model'''
-    return [source_word_to_int.get(word, source_word_to_int['<unk>']) for word in text]+ [source_word_to_int['<pad>']]*(sequence_length-len(text))
+    return [source_word_to_int.get(word.lower(), source_word_to_int['<unk>']) for word in text]+ [source_word_to_int['<pad>']]*(sequence_length-len(text))

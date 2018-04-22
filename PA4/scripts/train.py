@@ -133,13 +133,13 @@ def test(x, y):
 
 # Parameters for training
 # Number of Epochs
-epochs = 10
+epochs = 15
 # Number of datapoints
 size = len(train_source)
 # Number of batches
 num_batches = size / batch_size
 # patience and early stopping
-patience = 50
+patience = 5
 early_stop = 0
 loss_history = [np.inf]
 
@@ -189,6 +189,11 @@ if MODE == 'TEST' or MODE == 'TRAIN,TEST':
     # Sunny , with a high near 46 . West wind between 6 and 9 mph .
     text = helper.source_to_seq(input_sentence, source_word_to_int, sequence_length = 50)
 
+    source_path = 'data/test/test.combined'
+    source_sentences = helper.load_data(source_path)
+    source_sentences = [[source_word_to_int.get(word.lower(), source_word_to_int['<unk>']) for word in line.split()] for line in source_sentences]
+    #source_sentences[ : 8] = source_sentences[-8 : ]
+    #source_sentences = source_sentences[:batch_size]
     loaded_graph = tf.Graph()
 
     with tf.Session(graph = loaded_graph) as sess:
@@ -202,19 +207,25 @@ if MODE == 'TEST' or MODE == 'TRAIN,TEST':
         target_sequence_length = loaded_graph.get_tensor_by_name('target_sequence_length:0')
 
         #Multiply by batch_size to match the model's input parameters
-        answer_logits = sess.run(logits, {input_data: [text]*batch_size,
-                                          target_sequence_length: [len(text)]*batch_size,
-                                          source_sequence_length: [len(text)]*batch_size})[0]
+        pad = source_word_to_int["<pad>"]
+        summaries = []
+        for batch_i, (y_batch, x_batch, y_lengths, x_lengths) in enumerate(
+                helper.get_batches(source_sentences, source_sentences, batch_size,
+                           source_word_to_int['<pad>'],
+                           target_word_to_int['<pad>'])):
+            answer_logits = sess.run(logits, {input_data: x_batch,
+                                          target_sequence_length: [50] * batch_size,
+                                          source_sequence_length: x_lengths})
 
-    pad = source_word_to_int["<pad>"]
-
-    print('Original Text:', input_sentence)
-
-    print('\nSource')
-    print('  Word Ids:    {}'.format([i for i in text]))
-    print('  Input Words: {}'.format(" ".join([source_int_to_word[i] for i in text])))
-
-
-    print('\nTarget')
-    print('  Word Ids:       {}'.format([i for i in answer_logits if i != pad]))
-    print('  Response Words: {}'.format(" ".join([target_int_to_word[i] for i in answer_logits if i != pad])))
+            for index, answer_logit in enumerate(answer_logits):
+                #print 'Input : {}'.format(' '.join([source_int_to_word[i] for i in source_sentences[index]]))
+                words = [target_int_to_word[i] for i in answer_logit if i != pad][: -1]
+                words[0] = words[0][0].upper() + words[0][1 : ]
+                for i in np.arange(1, len(words)):
+                    if words[i - 1] == '.':
+                        words[i] = words[i][0].upper() + words[i][1 : ]
+                summaries.append(' '.join(words))
+                #print 'Output : {}'.format(summaries[-1])
+        with open(os.path.join(model_path, 'test_summaries.txt'), 'w') as f:
+            for line in summaries:
+                f.write('{}\n'.format(line))
